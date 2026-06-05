@@ -1,0 +1,42 @@
+{
+  "expo": {
+    "name": "APNG Vending",
+    "slug": "apng-vending-mobile-client",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "apng-vending",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "backgroundColor": "#FFFFFF",
+      "resizeMode": "contain"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.apng.vending"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#FFFFFF"
+      },
+      "package": "com.apng.vending"
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static"
+    },
+    "plugins": [
+      [
+        "expo-router",
+        {
+          "root": "./app",
+          "origin": "https://apng-vending.app"
+        }
+      ],
+      "expo-font"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
