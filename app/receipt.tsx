@@ -1,112 +1,197 @@
-/**
- * ReceiptScreen — React Native / Expo Router.
- * height:"100%" → alignSelf:"stretch", width:"100%" → alignSelf:"stretch" / flex:1,
- * boxShadow → shadow*, backdropFilter removed, SVGs via react-native-svg.
- */
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
-  TouchableOpacity,
   ScrollView,
   StyleSheet,
+  Share,
+  Clipboard,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { IconCheck, IconCopy, IconShare } from '@/components/icons';
+import { IconArrowLeft } from '@/components/icons';
 import { PS_400, PS_600, PS_700 } from '@/components/fonts';
+import { useTheme } from '@/context/ThemeContext';
+import { ThemeColors } from '@/constants/theme';
+import { InteractiveButton } from '@/components/FormField';
+import Svg, { Rect, Path } from 'react-native-svg';
 
-// ─── Row component ────────────────────────────────────────────────────────────
+// ─── Custom Icons ─────────────────────────────────────────────────────────────
 
-function ReceiptRow({ label, value, mono = false }: { label: string; value: string; mono?: boolean }) {
+function IconCopy({ color = '#F70003', size = 14 }: { color?: string; size?: number }) {
   return (
-    <View style={rs.receiptRow}>
-      <Text style={rs.receiptLabel}>{label}</Text>
-      <Text style={[rs.receiptValue, mono && rs.receiptValueMono]}>{value}</Text>
-    </View>
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Rect x="9" y="9" width="12" height="12" rx="2" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <Path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+}
+
+function IconShare({ color = 'white', size = 16 }: { color?: string; size?: number }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <Path d="M18 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM6 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM18 22a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" fill="none" />
+      <Path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98" />
+    </Svg>
+  );
+}
+
+function IconCheck({ color = 'white', size = 20 }: { color?: string; size?: number }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M20 6L9 17l-5-5" stroke={color} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
   );
 }
 
 // ─── Main screen ──────────────────────────────────────────────────────────────
 
-/** Payment receipt screen. */
 export default function ReceiptScreen() {
   const router = useRouter();
+  const { colors, isDark } = useTheme();
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    try {
+      if (Clipboard && Clipboard.setString) {
+        Clipboard.setString('4512 8894 0021 3564 7781');
+      }
+    } catch (e) {
+      console.log('Clipboard error:', e);
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleShare = async () => {
+    try {
+      await Share.share({
+        message: `Access Power Receipt\n\nPrepaid Token: 4512 8894 0021 3564 7781\nTotal Amount: ₦1,100.00\nMeter Number: 45151438822 (AEDC)\nCustomer: ASIN ABIA\nAddress: HOUSE 41, 6TH AVENUE GALADIMA. GWARINPA\nReference: 4WG20QGDKEXDI0D\nDate: May 18, 2026 09:51 AM`,
+      });
+    } catch (error) {
+      console.log('Share error:', error);
+    }
+  };
+
+  const styles = getStyles(colors, isDark);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#F7F6F8' }}>
-      <View style={rs.screen}>
-        <View style={rs.header}>
-          <Text style={rs.headerTitle}>Receipt</Text>
-          <TouchableOpacity style={rs.shareBtn} onPress={() => {}} activeOpacity={0.7}>
-            <IconShare />
-          </TouchableOpacity>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+      <View style={styles.screen}>
+        {/* Header */}
+        <View style={styles.header}>
+          <InteractiveButton onPress={() => router.back()} style={styles.backBtn}>
+            <IconArrowLeft size={24} color={isDark ? "white" : "black"} />
+          </InteractiveButton>
+          <Text style={styles.headerTitle}>Receipt</Text>
         </View>
 
-        <ScrollView style={{ flex: 1 }} contentContainerStyle={[rs.scrollContent, { flexGrow: 1, justifyContent: 'space-between', maxWidth: 600, width: '100%', alignSelf: 'center' }]} showsVerticalScrollIndicator={false}>
-          <View style={{ gap: 20, alignItems: 'center', alignSelf: 'stretch' }}>
-            {/* Success hero */}
-            <View style={rs.hero}>
-            <View style={rs.heroCircle}>
-              <View style={rs.heroInnerCircle}>
-                <IconCheck size={40} />
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={[
+            styles.scrollContent,
+            { flexGrow: 1, justifyContent: 'space-between', maxWidth: 600, width: '100%', alignSelf: 'center' }
+          ]}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={{ gap: 24, width: '100%', alignItems: 'center' }}>
+            {/* Success Hero */}
+            <View style={styles.hero}>
+              <View style={styles.successRing}>
+                <View style={styles.successCircle}>
+                  <IconCheck size={18} color="white" />
+                </View>
               </View>
+              <Text style={styles.heroTitle}>Payment Successful!</Text>
+              <Text style={styles.heroSub}>Your transaction has been processed.</Text>
             </View>
-            <Text style={rs.heroTitle}>Payment Successful!</Text>
-            <Text style={rs.heroSub}>Your electricity token has been generated</Text>
-            <View style={rs.amountPill}>
-              <Text style={rs.amountText}>₦5,000</Text>
+
+            {/* Prepaid Token Card */}
+            <View style={styles.tokenCard}>
+              <Text style={styles.tokenLabel}>PREPAID TOKEN</Text>
+              <Text style={styles.tokenCode}>4512 · 8894 · 0021 · 3564 · 7781</Text>
+              <InteractiveButton
+                style={[
+                  styles.copyBtn,
+                  copied && { borderColor: 'rgba(34,197,94,0.4)' }
+                ]}
+                onPress={handleCopy}
+                activeScale={0.96}
+              >
+                {copied ? (
+                  <IconCheck size={13} color="#22C55E" />
+                ) : (
+                  <IconCopy size={13} />
+                )}
+                <Text style={[styles.copyBtnText, copied && { color: '#22C55E' }]}>
+                  {copied ? 'Copied!' : 'Copy Token'}
+                </Text>
+              </InteractiveButton>
             </View>
-          </View>
 
-          {/* Token card */}
-          <View style={rs.tokenContainer}>
-            <View style={rs.tokenCard}>
-              <Text style={rs.tokenLabel}>YOUR TOKEN</Text>
-              <Text style={rs.tokenCode}>4515  -  1438  -  8822</Text>
+            {/* Receipt Details Card */}
+            <View style={styles.detailCard}>
+              <Text style={styles.totalAmountLabel}>TOTAL AMOUNT</Text>
+              <Text style={styles.totalAmountValue}>₦1,100.00</Text>
+              
+              <View style={styles.sep} />
 
-              {/* Barcode bars — height:"100%" replaced with alignSelf:"stretch" */}
-              <View style={rs.barcodeBarRow}>
-                {[12, 8, 16, 6, 10, 8, 14, 6, 10, 12, 8, 16, 6, 10, 8, 14, 6, 10, 12, 8].map((w, i) => (
-                  <View key={i} style={[rs.barcodeBar, { width: w, alignSelf: 'stretch' }]} />
+              <View style={styles.rowsContainer}>
+                <View style={styles.detailItemRow}>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                    <Text style={styles.detailLabel}>METER NUMBER</Text>
+                    <View style={styles.discoPill}>
+                      <Text style={styles.discoPillText}>AEDC</Text>
+                    </View>
+                  </View>
+                  <Text style={styles.detailValueLeft}>45151438822</Text>
+                </View>
+
+                <View style={styles.detailItemRow}>
+                  <Text style={styles.detailLabel}>CUSTOMER</Text>
+                  <Text style={styles.detailValueLeft}>ASIN ABIA</Text>
+                </View>
+
+                <View style={styles.detailItemRow}>
+                  <Text style={styles.detailLabel}>ADDRESS</Text>
+                  <Text style={[styles.detailValueLeft, { lineHeight: 20 }]}>
+                    HOUSE 41, 6TH AVENUE GALADIMA. GWARINPA
+                  </Text>
+                </View>
+
+                <View style={[styles.detailItemRow, { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 0 }]}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.detailLabel}>DATE</Text>
+                    <Text style={styles.detailValueLeft}>May 18, 2026</Text>
+                    <Text style={styles.dateSubtext}>09:51 AM</Text>
+                  </View>
+                  <View style={{ flex: 1, paddingLeft: 16 }}>
+                    <Text style={styles.detailLabel}>REFERENCE</Text>
+                    <Text style={styles.detailValueLeft}>4WG20QGDKEXDI0D</Text>
+                  </View>
+                </View>
+              </View>
+
+              <View style={styles.dottedDivider} />
+
+              {/* Barcode bars */}
+              <View style={styles.barcodeBarRow}>
+                {[6, 14, 6, 6, 14, 6, 6, 14, 6, 6, 14].map((w, i) => (
+                  <View key={i} style={[styles.barcodeBar, { width: w }]} />
                 ))}
               </View>
-
-              <TouchableOpacity style={rs.copyBtn} onPress={() => {}} activeOpacity={0.7}>
-                <IconCopy size={13} />
-                <Text style={rs.copyBtnText}>Copy Token</Text>
-              </TouchableOpacity>
             </View>
           </View>
 
-          {/* Details */}
-          <View style={rs.detailCard}>
-            <ReceiptRow label="Provider" value="AEDC" />
-            <View style={rs.sep} />
-            <ReceiptRow label="Meter Number" value="4515-1438-8822" mono />
-            <View style={rs.sep} />
-            <ReceiptRow label="Customer Name" value="David Abuh" />
-            <View style={rs.sep} />
-            <ReceiptRow label="Phone" value="090 7380 8749" />
-            <View style={rs.sep} />
-            <ReceiptRow label="Amount Paid" value="₦5,000" />
-            <View style={rs.sep} />
-            <ReceiptRow label="Units" value="22.47 kWh" />
-            <View style={rs.sep} />
-            <ReceiptRow label="Reference" value="APNG-24051-7732" mono />
-            <View style={rs.sep} />
-            <ReceiptRow label="Date" value="22 May 2026, 15:30" />
-          </View>
-          </View>
+          <View style={{ gap: 16, marginTop: 32, width: '100%' }}>
+            <InteractiveButton style={styles.submitBtn} onPress={handleShare}>
+              <IconShare color="white" size={16} />
+              <Text style={styles.submitText}>Share Receipt</Text>
+            </InteractiveButton>
 
-          {/* Actions */}
-          <View style={rs.actions}>
-            <TouchableOpacity style={rs.backHomeBtn} onPress={() => router.replace('/dashboard')} activeOpacity={0.85}>
-              <Text style={rs.backHomeBtnText}>Back to Home</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={rs.newPurchaseBtn} onPress={() => router.push('/purchase-unit')} activeOpacity={0.85}>
-              <Text style={rs.newPurchaseBtnText}>New Purchase</Text>
-            </TouchableOpacity>
+            <InteractiveButton style={styles.backHomeBtn} onPress={() => router.replace('/dashboard')}>
+              <Text style={styles.backHomeBtnText}>Back to Home</Text>
+            </InteractiveButton>
           </View>
         </ScrollView>
       </View>
@@ -114,50 +199,92 @@ export default function ReceiptScreen() {
   );
 }
 
-const rs = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#F7F6F8', position: 'relative', overflow: 'hidden' },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 24, paddingVertical: 16 },
-  headerTitle: { fontFamily: PS_700, fontSize: 20, color: '#191c1e', lineHeight: 32 },
-  shareBtn: { width: 40, height: 40, borderRadius: 9999, backgroundColor: '#F70003', alignItems: 'center', justifyContent: 'center', shadowColor: '#BC0001', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.2, shadowRadius: 6, elevation: 4 },
-  scrollContent: { paddingHorizontal: 24, paddingBottom: 48, gap: 20, alignItems: 'center' },
-  hero: { alignItems: 'center', paddingTop: 8, gap: 8 },
-  heroCircle: { width: 80, height: 80, borderRadius: 9999, backgroundColor: 'rgba(22,163,74,0.1)', alignItems: 'center', justifyContent: 'center' },
-  heroInnerCircle: { width: 64, height: 64, borderRadius: 9999, backgroundColor: 'rgba(22,163,74,0.15)', alignItems: 'center', justifyContent: 'center' },
-  heroTitle: { fontFamily: PS_700, fontSize: 24, color: '#191c1e', lineHeight: 32, textAlign: 'center' },
-  heroSub: { fontFamily: PS_400, fontSize: 14, color: '#5f5e5e', lineHeight: 20, textAlign: 'center' },
-  amountPill: { backgroundColor: 'rgba(22,163,74,0.1)', borderRadius: 9999, paddingHorizontal: 20, paddingVertical: 8, marginTop: 4 },
-  amountText: { fontFamily: PS_700, fontSize: 28, color: '#16A34A', lineHeight: 36 },
-  tokenContainer: { alignSelf: 'stretch' },
+const getStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
+  screen: { flex: 1, position: 'relative', overflow: 'hidden' },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 24, paddingVertical: 16, zIndex: 10 },
+  backBtn: { width: 24, height: 24, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  headerTitle: { fontFamily: PS_700, fontSize: 20, color: colors.textMain, lineHeight: 32, flex: 1 },
+  scrollContent: { paddingHorizontal: 24, paddingBottom: 48, alignItems: 'center' },
+  
+  // Success Hero
+  hero: { alignItems: 'center', gap: 8, marginTop: 8 },
+  successRing: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: isDark ? 'rgba(34,197,94,0.15)' : '#E8F8EE',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  successCircle: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: '#22C55E',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  heroTitle: { fontFamily: PS_700, fontSize: 22, color: colors.textMain, lineHeight: 30, textAlign: 'center' },
+  heroSub: { fontFamily: PS_400, fontSize: 14, color: colors.textSub, lineHeight: 20, textAlign: 'center' },
+
+  // Prepaid Token Card
   tokenCard: {
+    width: '100%',
+    backgroundColor: isDark ? colors.surface : '#F5F6F8',
     borderRadius: 24,
-    backgroundColor: '#FFFFFF',
     padding: 24,
     alignItems: 'center',
     gap: 12,
     borderWidth: 1,
-    borderColor: 'rgba(234,188,180,0.2)',
-    shadowColor: '#F70003',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.06,
+    borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(25,28,30,0.04)',
+  },
+  tokenLabel: { fontFamily: PS_600, fontSize: 11, color: colors.textSub, letterSpacing: 1, textTransform: 'uppercase' },
+  tokenCode: { fontFamily: PS_700, fontSize: 20, color: colors.textMain, letterSpacing: 1.5, lineHeight: 28, textAlign: 'center' },
+  copyBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: isDark ? '#2E2E2E' : '#FFFFFF',
+    borderRadius: 20,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(25,28,30,0.08)',
+  },
+  copyBtnText: { fontFamily: PS_600, fontSize: 13, color: '#F70003', lineHeight: 18 },
+
+  // Detail Card
+  detailCard: {
+    width: '100%',
+    backgroundColor: colors.surface,
+    borderRadius: 28,
+    padding: 24,
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(25,28,30,0.06)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: isDark ? 0.2 : 0.03,
     shadowRadius: 12,
     elevation: 3,
   },
-  tokenLabel: { fontFamily: PS_600, fontSize: 12, color: '#5f5e5e', letterSpacing: 0.6, lineHeight: 16, textTransform: 'uppercase' },
-  tokenCode: { fontFamily: PS_700, fontSize: 22, color: '#191c1e', letterSpacing: 2, lineHeight: 32, textAlign: 'center' },
-  barcodeBarRow: { flexDirection: 'row', alignItems: 'stretch', gap: 3, height: 48, alignSelf: 'stretch' },
-  // height:"100%" replaced with alignSelf:"stretch" on each bar (set inline)
-  barcodeBar: { backgroundColor: '#191c1e', borderRadius: 9999, opacity: 0.08 },
-  copyBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(188,0,1,0.06)', borderRadius: 9999, paddingHorizontal: 16, paddingVertical: 8, borderWidth: 1, borderColor: 'rgba(188,0,1,0.1)' },
-  copyBtnText: { fontFamily: PS_600, fontSize: 12, color: '#BC0001', lineHeight: 16 },
-  detailCard: { alignSelf: 'stretch', borderRadius: 24, backgroundColor: 'rgba(255,255,255,0.9)', padding: 24, borderWidth: 1, borderColor: 'rgba(234,188,180,0.2)', shadowColor: '#F70003', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2 },
-  receiptRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 2 },
-  receiptLabel: { fontFamily: PS_400, fontSize: 14, color: '#5f5e5e', lineHeight: 20 },
-  receiptValue: { fontFamily: PS_600, fontSize: 14, color: '#191c1e', lineHeight: 20, textAlign: 'right', flex: 1, paddingLeft: 16 },
-  receiptValueMono: { letterSpacing: 0.5 },
-  sep: { height: 1, backgroundColor: 'rgba(234,188,180,0.2)', marginVertical: 10 },
-  actions: { flexDirection: 'row', gap: 12, alignSelf: 'stretch' },
-  backHomeBtn: { flex: 1, backgroundColor: '#F70003', borderRadius: 32, height: 54, alignItems: 'center', justifyContent: 'center', shadowColor: '#BC0001', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.2, shadowRadius: 6, elevation: 4 },
-  backHomeBtnText: { fontFamily: PS_600, fontSize: 16, color: '#FFFFFF', lineHeight: 24 },
-  newPurchaseBtn: { flex: 1, backgroundColor: 'rgba(247,0,3,0.06)', borderRadius: 32, height: 54, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(247,0,3,0.15)' },
-  newPurchaseBtnText: { fontFamily: PS_600, fontSize: 16, color: '#F70003', lineHeight: 24 },
+  totalAmountLabel: { fontFamily: PS_600, fontSize: 11, color: colors.textSub, letterSpacing: 1, textAlign: 'center', marginBottom: 6, textTransform: 'uppercase' },
+  totalAmountValue: { fontFamily: PS_700, fontSize: 36, color: colors.textMain, lineHeight: 44, textAlign: 'center' },
+  sep: { height: 1, backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(25,28,30,0.06)', marginVertical: 20 },
+  rowsContainer: { gap: 20 },
+  detailItemRow: { width: '100%' },
+  detailLabel: { fontFamily: PS_600, fontSize: 10, color: colors.textSub, letterSpacing: 1, marginBottom: 4, textTransform: 'uppercase' },
+  detailValueLeft: { fontFamily: PS_700, fontSize: 15, color: colors.textMain, lineHeight: 22 },
+  dateSubtext: { fontFamily: PS_400, fontSize: 11, color: colors.textSub, marginTop: 2 },
+  discoPill: { backgroundColor: isDark ? 'rgba(247,0,3,0.15)' : '#FDE8E8', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4 },
+  discoPillText: { fontFamily: PS_700, fontSize: 10, color: '#F70003', letterSpacing: 0.5 },
+  dottedDivider: { height: 1, borderTopWidth: 1.5, borderTopColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(25,28,30,0.12)', borderStyle: 'dashed', marginVertical: 24 },
+  barcodeBarRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, height: 44, marginTop: 8 },
+  barcodeBar: { height: 44, backgroundColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(25,28,30,0.1)', borderRadius: 5 },
+
+  // Actions Buttons
+  submitBtn: { backgroundColor: '#F70003', borderRadius: 28, height: 56, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, shadowColor: '#BC0001', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.2, shadowRadius: 8, elevation: 5 },
+  submitText: { fontFamily: PS_600, fontSize: 16, color: '#FFFFFF', lineHeight: 24, textAlign: 'center' },
+  backHomeBtn: { backgroundColor: isDark ? '#2E2E2E' : '#EAE8EB', borderRadius: 28, height: 56, alignItems: 'center', justifyContent: 'center' },
+  backHomeBtnText: { fontFamily: PS_600, fontSize: 16, color: isDark ? '#E5E7EB' : '#5f5e5e', lineHeight: 24 },
 });
+

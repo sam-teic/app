@@ -1,9 +1,4 @@
-/**
- * ProfileScreen — React Native / Expo Router.
- * top:"50%" + transform replaced with calculated pixel position.
- * boxShadow → shadow*, backdropFilter removed, SVGs via react-native-svg.
- */
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,6 +6,7 @@ import {
   ScrollView,
   TextInput,
   StyleSheet,
+  Animated,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -19,6 +15,7 @@ import { IconShieldCheck } from '@/components/icons';
 import { PS_400, PS_600 } from '@/components/fonts';
 import { useTheme } from '@/context/ThemeContext';
 import { ThemeColors } from '@/constants/theme';
+import { InteractiveButton } from '@/components/FormField';
 
 // ─── Pill field ───────────────────────────────────────────────────────────────
 
@@ -37,19 +34,45 @@ function PillField({ label, value, onChangeText, icon, disabled = false, helperT
 }) {
   const { colors } = useTheme();
   const pf = getPillStyles(colors);
+  const [isFocused, setIsFocused] = useState(false);
+  const focusAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(focusAnim, {
+      toValue: isFocused && !disabled ? 1 : 0,
+      duration: 180,
+      useNativeDriver: false,
+    }).start();
+  }, [isFocused, disabled]);
+
+  const borderColor = focusAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [colors.border, colors.primary],
+  });
+
+  const backgroundColor = focusAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [
+      disabled ? colors.surfaceAlt : colors.surfaceSolid,
+      colors.background,
+    ],
+  });
+
   return (
     <View style={pf.fieldWrap}>
       <Text style={pf.fieldLabel}>{label}</Text>
       <View style={pf.fieldRow}>
-        <View style={[pf.pillInput, disabled && pf.pillInputDisabled]}>
+        <Animated.View style={[pf.pillInput, disabled && pf.pillInputDisabled, { borderColor, backgroundColor }]}>
           <TextInput
             style={[pf.pillText, disabled && pf.pillTextDisabled]}
             value={value}
             onChangeText={onChangeText}
             editable={!disabled}
             placeholderTextColor="#D8DADC"
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
           />
-        </View>
+        </Animated.View>
         {icon && <View style={pf.pillIcon}>{icon}</View>}
       </View>
       {helperText ? <Text style={pf.helperText}>{helperText}</Text> : null}
@@ -72,9 +95,9 @@ export default function ProfileScreen() {
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       <View style={ps.screen}>
         <View style={ps.header}>
-          <TouchableOpacity onPress={() => router.back()} activeOpacity={0.7} style={ps.backBtn}>
+          <InteractiveButton onPress={() => router.back()} style={ps.backBtn}>
             <IconArrowLeft size={24} color={colors.primary} />
-          </TouchableOpacity>
+          </InteractiveButton>
           <Text style={ps.headerTitle}>Manage Profile</Text>
         </View>
 
@@ -90,13 +113,13 @@ export default function ProfileScreen() {
 
           <View style={{ gap: 16 }}>
             <View style={ps.actionSection}>
-            <TouchableOpacity style={ps.saveBtn} onPress={() => router.replace('/dashboard')} activeOpacity={0.85}>
+            <InteractiveButton style={ps.saveBtn} onPress={() => router.replace('/dashboard')}>
               <View style={ps.saveBtnShadow} />
               <Text style={ps.saveBtnText}>Save Changes</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={ps.logoutBtn} onPress={() => router.replace('/welcome')} activeOpacity={0.7}>
+            </InteractiveButton>
+            <InteractiveButton style={ps.logoutBtn} onPress={() => router.replace('/welcome')}>
               <Text style={ps.logoutBtnText}>Log Out</Text>
-            </TouchableOpacity>
+            </InteractiveButton>
           </View>
 
             <View style={ps.securityBadge}>

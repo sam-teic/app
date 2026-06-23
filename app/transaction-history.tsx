@@ -2,7 +2,7 @@
  * TransactionHistoryScreen — React Native / Expo Router.
  * Uses SectionList for month grouping, responsive layouts, and matching design.
  */
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
   TextInput,
   StyleSheet,
   useWindowDimensions,
+  Animated,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -25,6 +26,7 @@ import {
 import { PS_400, PS_600, PS_700 } from '@/components/fonts';
 import { useTheme } from '@/context/ThemeContext';
 import { ThemeColors } from '@/constants/theme';
+import { InteractiveButton } from '@/components/FormField';
 
 // ─── Transaction data ─────────────────────────────────────────────────────────
 
@@ -159,6 +161,26 @@ export default function TransactionHistoryScreen() {
   const { colors } = useTheme();
   const th = getStyles(colors);
   const [search, setSearch] = useState('');
+  const [searchFocused, setSearchFocused] = useState(false);
+  const searchFocusAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(searchFocusAnim, {
+      toValue: searchFocused ? 1 : 0,
+      duration: 180,
+      useNativeDriver: false,
+    }).start();
+  }, [searchFocused]);
+
+  const searchBorderColor = searchFocusAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [colors.borderLight, colors.primary],
+  });
+
+  const searchBackgroundColor = searchFocusAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [colors.surfaceSolid, colors.background],
+  });
 
   // Optional: filter logic could be applied here
   const filteredData = TRANSACTIONS.map(section => ({
@@ -175,15 +197,15 @@ export default function TransactionHistoryScreen() {
       <View style={th.screen}>
         {/* Header */}
         <View style={th.header}>
-          <TouchableOpacity onPress={() => router.back()} activeOpacity={0.7} style={th.backBtn}>
+          <InteractiveButton onPress={() => router.back()} style={th.backBtn}>
             <IconArrowLeft size={24} color={colors.primary} />
-          </TouchableOpacity>
+          </InteractiveButton>
           <Text style={th.headerTitle}>Transaction History</Text>
         </View>
 
         {/* Search & Actions */}
         <View style={th.actionsContainer}>
-          <View style={th.searchBar}>
+          <Animated.View style={[th.searchBar, { borderColor: searchBorderColor, backgroundColor: searchBackgroundColor }]}>
             <View style={th.searchIcon}>
               <IconSearch color={colors.primary} size={20} />
             </View>
@@ -194,17 +216,19 @@ export default function TransactionHistoryScreen() {
               placeholder="Search by token or reference..."
               placeholderTextColor={colors.textSub}
               returnKeyType="search"
+              onFocus={() => setSearchFocused(true)}
+              onBlur={() => setSearchFocused(false)}
             />
-          </View>
+          </Animated.View>
           <View style={th.filterRow}>
-            <TouchableOpacity style={th.actionBtn} activeOpacity={0.8}>
+            <InteractiveButton style={th.actionBtn} onPress={() => {}}>
               <Text style={th.actionBtnText}>Sort by</Text>
               <SortIcon />
-            </TouchableOpacity>
-            <TouchableOpacity style={th.actionBtn} activeOpacity={0.8}>
+            </InteractiveButton>
+            <InteractiveButton style={th.actionBtn} onPress={() => {}}>
               <Text style={th.actionBtnText}>Filter</Text>
               <FilterIcon />
-            </TouchableOpacity>
+            </InteractiveButton>
           </View>
         </View>
 

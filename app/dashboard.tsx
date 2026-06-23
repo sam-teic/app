@@ -3,21 +3,32 @@
  * web-only CSS props replaced: boxShadow → shadow*, backdropFilter removed,
  * all SVG icons replaced with react-native-svg via @/components/icons.
  */
-import React from 'react';
+import React from "react";
 import {
   View,
   Text,
   TouchableOpacity,
   ScrollView,
   StyleSheet,
-} from 'react-native';
-import { useRouter } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { IconHamburger, IconBolt, IconWallet, IconArrowUp } from '@/components/icons';
-import { PS_400, PS_600, PS_700 } from '@/components/fonts';
-import { useTheme } from '@/context/ThemeContext';
-import { ThemeColors } from '@/constants/theme';
-
+} from "react-native";
+import { useRouter, useFocusEffect } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  IconHamburger,
+  IconBolt,
+  IconWallet,
+  IconShieldCheck,
+  IconCart,
+  IconWalletPlus,
+  IconPlus,
+  IconWalletGlow,
+  IconSpark,
+} from "@/components/icons";
+import { PS_400, PS_600, PS_700 } from "@/components/fonts";
+import { useTheme } from "@/context/ThemeContext";
+import { ThemeColors } from "@/constants/theme";
+import { InteractiveButton } from "@/components/FormField";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
@@ -28,7 +39,9 @@ function WalletCard() {
   return (
     <View style={ss.walletCardShadowWrapper}>
       <View style={ss.walletCardInner}>
-        <View style={ss.walletGlow} />
+        <View style={ss.walletGlow}>
+          <IconWalletGlow color={colors.primary} />
+        </View>
         <View style={ss.walletRow}>
           <View>
             <Text style={ss.walletLabel}>Total Wallet Balance</Text>
@@ -39,11 +52,11 @@ function WalletCard() {
             </View>
           </View>
           <View style={ss.walletIconBox}>
-            <IconBolt color={colors.primary} size={18} />
+            <IconWallet color={colors.primary} size={20} />
           </View>
         </View>
         <View style={ss.walletIdPill}>
-          <IconBolt color={colors.primary} size={12} />
+          <IconShieldCheck color={colors.primary} size={14} />
           <Text style={ss.walletIdText}>Active Wallet ID: AP-8822</Text>
         </View>
       </View>
@@ -58,17 +71,25 @@ function NoWalletCard({ onCreateWallet }: { onCreateWallet: () => void }) {
   return (
     <View style={ss.walletCardShadowWrapper}>
       <View style={ss.walletCardInner}>
-        <View style={ss.walletGlow} />
+        <View style={ss.walletGlow}>
+          <IconWalletGlow color={colors.primary} />
+        </View>
         <View style={ss.noWalletRow}>
           <View style={ss.noWalletIconCircle}>
-            <IconWallet color={colors.primary} size={25} />
+            <IconWallet color={colors.primary} size={22} />
           </View>
           <View style={{ flex: 1 }}>
             <Text style={ss.noWalletTitle}>No Active Wallet</Text>
-            <Text style={ss.noWalletDesc}>{'Create one to unlock bonuses and\nexclusive benefits.'}</Text>
+            <Text style={ss.noWalletDesc}>
+              {"Create one to unlock bonuses and\nexclusive benefits."}
+            </Text>
           </View>
         </View>
-        <TouchableOpacity style={ss.noWalletCreateBtn} onPress={onCreateWallet} activeOpacity={0.85}>
+        <TouchableOpacity
+          style={ss.noWalletCreateBtn}
+          onPress={onCreateWallet}
+          activeOpacity={0.85}
+        >
           <Text style={ss.noWalletCreateText}>Create Wallet</Text>
         </TouchableOpacity>
       </View>
@@ -83,7 +104,19 @@ export default function DashboardScreen() {
   const router = useRouter();
   const { colors } = useTheme();
   const ss = getStyles(colors);
-  const hasWallet = true;
+  const [hasWallet, setHasWallet] = React.useState(true);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      AsyncStorage.getItem("has_wallet").then((val) => {
+        if (val !== null) {
+          setHasWallet(val === "true");
+        } else {
+          setHasWallet(true); // default to true
+        }
+      });
+    }, []),
+  );
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
@@ -94,63 +127,90 @@ export default function DashboardScreen() {
             <Text style={ss.greeting}>GOOD MORNING</Text>
             <Text style={ss.userName}>David Abuh</Text>
           </View>
-          <TouchableOpacity style={ss.menuBtn} onPress={() => router.push('/menu')} activeOpacity={0.7}>
+          <InteractiveButton
+            style={ss.menuBtn}
+            onPress={() => router.push("/menu")}
+            activeScale={0.92}
+          >
             <IconHamburger color={colors.primary} />
-          </TouchableOpacity>
+          </InteractiveButton>
         </View>
 
-        <ScrollView style={ss.scroll} contentContainerStyle={ss.scrollContent} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          style={ss.scroll}
+          contentContainerStyle={ss.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
           {/* Wallet card */}
-          {hasWallet
-            ? <WalletCard />
-            : <NoWalletCard onCreateWallet={() => router.push('/create-wallet')} />
-          }
+          {hasWallet ? (
+            <WalletCard />
+          ) : (
+            <NoWalletCard
+              onCreateWallet={() => router.push("/create-wallet")}
+            />
+          )}
 
           {/* Action grid */}
           <View style={ss.actionGrid}>
-            <TouchableOpacity style={ss.purchaseBtn} onPress={() => router.push('/purchase-unit')} activeOpacity={0.85}>
+            <InteractiveButton
+              style={ss.purchaseBtn}
+              onPress={() => router.push("/purchase-unit")}
+              activeScale={0.97}
+            >
               <View style={ss.purchaseIconCircle}>
-                <IconBolt color="#FFFFFF" size={20} />
+                <IconCart color="#FFFFFF" size={20} />
               </View>
               <Text style={ss.purchaseBtnText}>Purchase Units</Text>
-            </TouchableOpacity>
+            </InteractiveButton>
 
-            <TouchableOpacity style={ss.createWalletBtn} onPress={() => router.push('/create-wallet')} activeOpacity={0.85}>
+            <InteractiveButton
+              style={ss.createWalletBtn}
+              onPress={() => router.push("/create-wallet")}
+              activeScale={0.97}
+            >
               <View style={ss.createWalletIconCircle}>
-                <IconWallet color={colors.primary} size={22} />
+                <IconWalletPlus color={colors.primary} size={22} />
               </View>
               <Text style={ss.createWalletBtnText}>Create Wallet</Text>
-            </TouchableOpacity>
+            </InteractiveButton>
           </View>
 
           {/* Transactions */}
           <View style={{ gap: 8 }}>
             <View style={ss.transHeader}>
               <Text style={ss.transTitle}>Recent Transactions</Text>
-              <TouchableOpacity activeOpacity={0.7} onPress={() => router.push('/transaction-history')}>
+              <InteractiveButton
+                onPress={() => router.push("/transaction-history")}
+                activeScale={0.92}
+                style={{ alignSelf: "center" }}
+              >
                 <Text style={ss.seeAll}>See All</Text>
-              </TouchableOpacity>
+              </InteractiveButton>
             </View>
 
             <View style={ss.transRow}>
-              <View style={ss.transIconBg}><IconBolt color={colors.primary} size={16} /></View>
+              <View style={ss.transIconBg}>
+                <IconBolt color={colors.primary} size={16} />
+              </View>
               <View style={{ flex: 1, marginLeft: 12, gap: 4 }}>
                 <Text style={ss.transName}>Ikeja Electric</Text>
                 <Text style={ss.transSub}>Token: 4515-1438-8822</Text>
               </View>
-              <View style={{ alignItems: 'flex-end', gap: 4 }}>
+              <View style={{ alignItems: "flex-end", gap: 4 }}>
                 <Text style={ss.transAmountNeg}>-₦5,000</Text>
                 <Text style={ss.transTime}>2h ago</Text>
               </View>
             </View>
 
             <View style={ss.transRow}>
-              <View style={ss.transIconBgLight}><IconArrowUp color={colors.primary} size={14} /></View>
+              <View style={ss.transIconBgLight}>
+                <IconPlus color={colors.primary} size={14} />
+              </View>
               <View style={{ flex: 1, marginLeft: 12, gap: 4 }}>
                 <Text style={ss.transName}>Wallet Top-up</Text>
                 <Text style={ss.transSub}>Via Bank Transfer</Text>
               </View>
-              <View style={{ alignItems: 'flex-end', gap: 4 }}>
+              <View style={{ alignItems: "flex-end", gap: 4 }}>
                 <Text style={ss.transAmountPos}>+₦20,000</Text>
                 <Text style={ss.transTime}>Yesterday</Text>
               </View>
@@ -159,17 +219,28 @@ export default function DashboardScreen() {
 
           {/* Power Saving Tip */}
           <View style={ss.tipCard}>
-            <Text style={ss.tipTitle}>Power Saving <Text style={{ color: '#F9943A' }}>Tip</Text></Text>
+            <View style={ss.tipBgBolt}>
+              <IconSpark size={120} />
+            </View>
+            <Text style={ss.tipTitle}>Power Saving Tip</Text>
             <Text style={ss.tipBody}>
-              Switching to LED bulbs can reduce your lighting energy usage by up to 80%.
+              Switching to LED bulbs can reduce your lighting energy usage by up
+              to 80%.
             </Text>
+            <TouchableOpacity style={ss.tipLearnMoreBtn} activeOpacity={0.85}>
+              <Text style={ss.tipLearnMoreText}>Learn More</Text>
+            </TouchableOpacity>
           </View>
         </ScrollView>
 
         {/* Floating action button */}
-        <View style={ss.fab}>
+        <InteractiveButton
+          style={ss.fab}
+          onPress={() => router.push("/quick-menu")}
+          activeScale={0.9}
+        >
           <IconBolt color="#FFFFFF" size={20} />
-        </View>
+        </InteractiveButton>
       </View>
     </SafeAreaView>
   );
@@ -177,70 +248,395 @@ export default function DashboardScreen() {
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
-const getStyles = (colors: ThemeColors) => StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.background, position: 'relative', overflow: 'hidden' },
-  header: {
-    backgroundColor: colors.headerBg,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-    zIndex: 10,
-  },
-  greeting: { fontFamily: PS_600, fontSize: 12, color: colors.textSub, letterSpacing: 0.6, lineHeight: 16, textTransform: 'uppercase' },
-  userName: { fontFamily: PS_700, fontSize: 24, color: colors.textMain, lineHeight: 32 },
-  menuBtn: { width: 40, height: 40, borderRadius: 9999, alignItems: 'center', justifyContent: 'center' },
-  scroll: { flex: 1 },
-  scrollContent: { paddingHorizontal: 24, paddingTop: 16, paddingBottom: 96, gap: 16, maxWidth: 800, width: '100%', alignSelf: 'center' },
-  walletCardShadowWrapper: {
-    borderRadius: 32,
-    backgroundColor: colors.surfaceSolid,
-  },
-  walletCardInner: {
-    borderRadius: 32,
-    padding: 25,
-    gap: 16,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: colors.borderLight,
-  },
-  walletGlow: { position: 'absolute', right: -39, top: -39, width: 141, height: 141, borderRadius: 9999, backgroundColor: colors.pillBg },
-  walletRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
-  walletLabel: { fontFamily: PS_600, fontSize: 12, color: colors.textSub, letterSpacing: 0.6, lineHeight: 16 },
-  balanceRow: { flexDirection: 'row', alignItems: 'baseline', gap: 2, marginTop: 3.5 },
-  currencySign: { fontFamily: PS_600, fontSize: 20, color: colors.textSub, letterSpacing: -0.96, lineHeight: 28 },
-  balanceMain: { fontFamily: PS_700, fontSize: 32, color: colors.textMain, letterSpacing: -0.96, lineHeight: 56 },
-  balanceCents: { fontFamily: PS_400, fontSize: 16, color: colors.textSub, lineHeight: 20 },
-  walletIconBox: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.iconBgLight, alignItems: 'center', justifyContent: 'center' },
-  walletIdPill: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.pillBg, borderRadius: 9999, paddingHorizontal: 13, paddingVertical: 9, alignSelf: 'flex-start', borderWidth: 1, borderColor: colors.border },
-  walletIdText: { fontFamily: PS_600, fontSize: 12, color: colors.primary, letterSpacing: 0.6, lineHeight: 16 },
-  noWalletRow: { flexDirection: 'row', alignItems: 'center', gap: 24 },
-  noWalletIconCircle: { width: 64, height: 64, borderRadius: 9999, backgroundColor: colors.iconBgLight, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
-  noWalletTitle: { fontFamily: PS_600, fontSize: 20, color: colors.textMain, lineHeight: 28 },
-  noWalletDesc: { fontFamily: PS_400, fontSize: 12, color: colors.textSub, lineHeight: 16, marginTop: 4 },
-  noWalletCreateBtn: { height: 44, backgroundColor: colors.primary, borderRadius: 200, alignItems: 'center', justifyContent: 'center' },
-  noWalletCreateText: { fontFamily: PS_600, fontSize: 12, color: '#FFFFFF', lineHeight: 16, textAlign: 'center' },
-  actionGrid: { flexDirection: 'row', gap: 16, minHeight: 110, flexWrap: 'wrap' },
-  purchaseBtn: { flex: 1, minWidth: 140, backgroundColor: colors.primary, borderRadius: 32, alignItems: 'center', justifyContent: 'center', gap: 12, paddingVertical: 32 },
-  purchaseIconCircle: { width: 56, height: 56, borderRadius: 28, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
-  purchaseBtnText: { fontFamily: PS_600, fontSize: 12, color: '#FFFFFF', letterSpacing: 0.2, lineHeight: 16, textAlign: 'center' },
-  createWalletBtn: { flex: 1, minWidth: 140, borderRadius: 32, backgroundColor: colors.surfaceSolid, alignItems: 'center', justifyContent: 'center', gap: 12, paddingVertical: 32 },
-  createWalletIconCircle: { width: 56, height: 56, borderRadius: 28, backgroundColor: colors.iconBgLight, alignItems: 'center', justifyContent: 'center' },
-  createWalletBtnText: { fontFamily: PS_600, fontSize: 12, color: colors.primary, letterSpacing: 0.2, lineHeight: 16, textAlign: 'center' },
-  transHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 4 },
-  transTitle: { fontFamily: PS_600, fontSize: 20, color: colors.textMain, lineHeight: 28 },
-  seeAll: { fontFamily: PS_600, fontSize: 12, color: colors.primary, letterSpacing: 0.6, lineHeight: 16, textAlign: 'center' },
-  transRow: { flexDirection: 'row', alignItems: 'center', padding: 17, borderRadius: 24, backgroundColor: colors.surfaceSolid },
-  transIconBg: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.iconBgSubtle, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
-  transIconBgLight: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.iconBgLight, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
-  transName: { fontFamily: PS_400, fontSize: 16, color: colors.textMain, lineHeight: 20 },
-  transSub: { fontFamily: PS_400, fontSize: 14, color: colors.textSub, lineHeight: 20 },
-  transAmountNeg: { fontFamily: PS_400, fontSize: 16, color: colors.textMain, lineHeight: 24, textAlign: 'right' },
-  transAmountPos: { fontFamily: PS_400, fontSize: 16, color: colors.primary, lineHeight: 24, textAlign: 'right' },
-  transTime: { fontFamily: PS_400, fontSize: 12, color: colors.textSub, letterSpacing: 0.6, lineHeight: 16, textAlign: 'right' },
-  tipCard: { backgroundColor: '#2D3133', borderRadius: 32, padding: 24, paddingBottom: 40, gap: 8, overflow: 'hidden' },
-  tipTitle: { fontFamily: PS_600, fontSize: 20, color: '#FFFFFF', lineHeight: 28 },
-  tipBody: { fontFamily: PS_400, fontSize: 14, color: '#EFF1F3', lineHeight: 20, opacity: 0.8, paddingBottom: 8, maxWidth: 269 },
-  fab: { position: 'absolute', right: 24, bottom: 48, width: 56, height: 56, backgroundColor: colors.primary, borderRadius: 28, alignItems: 'center', justifyContent: 'center' },
-});
+const getStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    screen: {
+      flex: 1,
+      backgroundColor: colors.background,
+      position: "relative",
+      overflow: "hidden",
+    },
+    header: {
+      backgroundColor: colors.headerBg,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingHorizontal: 24,
+      paddingVertical: 16,
+      zIndex: 10,
+    },
+    greeting: {
+      fontFamily: PS_600,
+      fontSize: 12,
+      color: colors.textSub,
+      letterSpacing: 0.6,
+      lineHeight: 16,
+      textTransform: "uppercase",
+    },
+    userName: {
+      fontFamily: PS_700,
+      fontSize: 24,
+      color: colors.textMain,
+      lineHeight: 32,
+    },
+    menuBtn: {
+      width: 40,
+      height: 40,
+      borderRadius: 9999,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    scroll: { flex: 1 },
+    scrollContent: {
+      paddingHorizontal: 24,
+      paddingTop: 16,
+      paddingBottom: 96,
+      gap: 24,
+      maxWidth: 800,
+      width: "100%",
+      alignSelf: "center",
+    },
+    walletCardShadowWrapper: {
+      borderRadius: 32,
+      backgroundColor: colors.surfaceSolid,
+      shadowColor: "#000000",
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.05,
+      shadowRadius: 12,
+      elevation: 3,
+    },
+    walletCardInner: {
+      borderRadius: 32,
+      padding: 25,
+      gap: 16,
+      overflow: "hidden",
+      borderWidth: 1,
+      borderColor: colors.borderLight,
+    },
+    walletGlow: {
+      position: "absolute",
+      right: -39,
+      top: -39,
+      width: 141,
+      height: 141,
+    },
+    walletRow: {
+      flexDirection: "row",
+      alignItems: "flex-start",
+      justifyContent: "space-between",
+    },
+    walletLabel: {
+      fontFamily: PS_600,
+      fontSize: 12,
+      color: colors.textSub,
+      letterSpacing: 0.6,
+      lineHeight: 16,
+    },
+    balanceRow: {
+      flexDirection: "row",
+      alignItems: "baseline",
+      gap: 2,
+      marginTop: 3.5,
+    },
+    currencySign: {
+      fontFamily: PS_600,
+      fontSize: 20,
+      color: colors.textSub,
+      letterSpacing: -0.96,
+      lineHeight: 28,
+    },
+    balanceMain: {
+      fontFamily: PS_700,
+      fontSize: 32,
+      color: colors.textMain,
+      letterSpacing: -0.96,
+      lineHeight: 56,
+    },
+    balanceCents: {
+      fontFamily: PS_400,
+      fontSize: 16,
+      color: colors.textSub,
+      lineHeight: 20,
+    },
+    walletIconBox: {
+      width: 44,
+      height: 44,
+      borderRadius: 12,
+      backgroundColor: colors.iconBgSubtle,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    walletIdPill: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      backgroundColor: colors.pillBg,
+      borderRadius: 9999,
+      paddingHorizontal: 13,
+      paddingVertical: 9,
+      alignSelf: "flex-start",
+      borderWidth: 1,
+      borderColor: "rgba(247, 0, 3, 0.15)",
+    },
+    walletIdText: {
+      fontFamily: PS_600,
+      fontSize: 12,
+      color: colors.primary,
+      letterSpacing: 0.6,
+      lineHeight: 16,
+    },
+    noWalletRow: { flexDirection: "row", alignItems: "center", gap: 24 },
+    noWalletIconCircle: {
+      width: 64,
+      height: 64,
+      borderRadius: 32,
+      backgroundColor: colors.iconBgSubtle,
+      alignItems: "center",
+      justifyContent: "center",
+      flexShrink: 0,
+    },
+    noWalletTitle: {
+      fontFamily: PS_600,
+      fontSize: 20,
+      color: colors.textMain,
+      lineHeight: 28,
+    },
+    noWalletDesc: {
+      fontFamily: PS_400,
+      fontSize: 12,
+      color: colors.textSub,
+      lineHeight: 16,
+      marginTop: 4,
+    },
+    noWalletCreateBtn: {
+      height: 48,
+      backgroundColor: colors.primary,
+      borderRadius: 200,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    noWalletCreateText: {
+      fontFamily: PS_600,
+      fontSize: 14,
+      color: "#FFFFFF",
+      lineHeight: 16,
+      textAlign: "center",
+    },
+    actionGrid: {
+      flexDirection: "row",
+      gap: 16,
+      minHeight: 110,
+      flexWrap: "wrap",
+    },
+    purchaseBtn: {
+      flex: 1,
+      minWidth: 140,
+      backgroundColor: colors.primary,
+      borderRadius: 32,
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 12,
+      paddingVertical: 16,
+      shadowColor: colors.primary,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.15,
+      shadowRadius: 10,
+      elevation: 4,
+    },
+    purchaseIconCircle: {
+      width: 50,
+      height: 50,
+      borderRadius: 28,
+      backgroundColor: "rgba(255,255,255,0.2)",
+      alignItems: "center",
+      justifyContent: "center",
+      shadowColor: "#000000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 2,
+    },
+    purchaseBtnText: {
+      fontFamily: PS_600,
+      fontSize: 12,
+      color: "#FFFFFF",
+      letterSpacing: 0.2,
+      lineHeight: 16,
+      textAlign: "center",
+    },
+    createWalletBtn: {
+      flex: 1,
+      minWidth: 140,
+      borderRadius: 32,
+      backgroundColor: colors.surfaceSolid,
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 12,
+      paddingVertical: 16,
+      shadowColor: "#000000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.03,
+      shadowRadius: 8,
+      elevation: 2,
+    },
+    createWalletIconCircle: {
+      width: 50,
+      height: 50,
+      borderRadius: 28,
+      backgroundColor: colors.iconBgLight,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    createWalletBtnText: {
+      fontFamily: PS_600,
+      fontSize: 12,
+      color: colors.primary,
+      letterSpacing: 0.2,
+      lineHeight: 16,
+      textAlign: "center",
+    },
+    transHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingHorizontal: 4,
+    },
+    transTitle: {
+      fontFamily: PS_600,
+      fontSize: 20,
+      color: colors.textMain,
+      lineHeight: 28,
+    },
+    seeAll: {
+      fontFamily: PS_600,
+      fontSize: 12,
+      color: colors.primary,
+      letterSpacing: 0.6,
+      lineHeight: 16,
+      textAlign: "center",
+    },
+    transRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      padding: 17,
+      borderRadius: 24,
+      backgroundColor: colors.surfaceSolid,
+      shadowColor: "#000000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.03,
+      shadowRadius: 8,
+      elevation: 2,
+    },
+    transIconBg: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      backgroundColor: colors.iconBgSubtle,
+      alignItems: "center",
+      justifyContent: "center",
+      flexShrink: 0,
+    },
+    transIconBgLight: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      backgroundColor: colors.iconBgLight,
+      alignItems: "center",
+      justifyContent: "center",
+      flexShrink: 0,
+    },
+    transName: {
+      fontFamily: PS_400,
+      fontSize: 16,
+      color: colors.textMain,
+      lineHeight: 20,
+    },
+    transSub: {
+      fontFamily: PS_400,
+      fontSize: 14,
+      color: colors.textSub,
+      lineHeight: 20,
+    },
+    transAmountNeg: {
+      fontFamily: PS_400,
+      fontSize: 16,
+      color: colors.textMain,
+      lineHeight: 24,
+      textAlign: "right",
+    },
+    transAmountPos: {
+      fontFamily: PS_400,
+      fontSize: 16,
+      color: colors.primary,
+      lineHeight: 24,
+      textAlign: "right",
+    },
+    transTime: {
+      fontFamily: PS_400,
+      fontSize: 12,
+      color: colors.textSub,
+      letterSpacing: 0.6,
+      lineHeight: 16,
+      textAlign: "right",
+    },
+    tipCard: {
+      backgroundColor: "#2D3133",
+      borderRadius: 32,
+      padding: 24,
+      paddingBottom: 36,
+      gap: 8,
+      overflow: "hidden",
+      shadowColor: "#000000",
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.1,
+      shadowRadius: 12,
+      elevation: 4,
+    },
+    tipBgBolt: {
+      position: "absolute",
+      right: -15,
+      bottom: -15,
+      opacity: 0.35,
+      transform: [{ rotate: "-15deg" }],
+    },
+    tipTitle: {
+      fontFamily: PS_600,
+      fontSize: 20,
+      color: "#FFFFFF",
+      lineHeight: 28,
+    },
+    tipBody: {
+      fontFamily: PS_400,
+      fontSize: 14,
+      color: "#EFF1F3",
+      lineHeight: 20,
+      opacity: 0.8,
+      paddingBottom: 8,
+      maxWidth: 269,
+    },
+    tipLearnMoreBtn: {
+      backgroundColor: "#FFFFFF",
+      borderRadius: 20,
+      paddingHorizontal: 20,
+      paddingVertical: 10,
+      alignSelf: "flex-start",
+      marginTop: 8,
+    },
+    tipLearnMoreText: { fontFamily: PS_600, fontSize: 12, color: "#1A1A1A" },
+    fab: {
+      position: "absolute",
+      right: 24,
+      bottom: 48,
+      width: 56,
+      height: 56,
+      backgroundColor: colors.primary,
+      borderRadius: 16,
+      alignItems: "center",
+      justifyContent: "center",
+      shadowColor: colors.primary,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.25,
+      shadowRadius: 10,
+      elevation: 5,
+    },
+  });

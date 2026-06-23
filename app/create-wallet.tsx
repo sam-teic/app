@@ -1,9 +1,4 @@
-/**
- * CreateWalletScreen — React Native / Expo Router.
- * borderBottom string shorthands replaced with borderBottomWidth/Color,
- * boxShadow → shadow*, backdropFilter removed, all SVGs replaced.
- */
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,15 +6,21 @@ import {
   ScrollView,
   TextInput,
   StyleSheet,
+  Animated,
+  Image,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { IconArrowLeft, IconArrowRight, IconPhone, IconSms, IconEyeSlash, IconEye } from '@/components/icons';
+import { IconArrowLeft, IconArrowRight, IconEye, IconEyeSlash } from '@/components/icons';
+
+const marginIcon = require('@/assets/icons/Margin.png') as number;
+const callIcon = require('@/assets/icons/call.png') as number;
+const smsIcon = require('@/assets/icons/sms.png') as number;
 import { PS_400, PS_600, PS_700 } from '@/components/fonts';
 import { useTheme } from '@/context/ThemeContext';
 import { ThemeColors } from '@/constants/theme';
-
-
+import { InteractiveButton } from '@/components/FormField';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // ─── Reusable underline field ─────────────────────────────────────────────────
 
@@ -34,10 +35,26 @@ function UnderlineField({ label, value, onChangeText, placeholder, keyboardType,
 }) {
   const { colors } = useTheme();
   const cw = getStyles(colors);
+  const [isFocused, setIsFocused] = useState(false);
+  const focusAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(focusAnim, {
+      toValue: isFocused ? 1 : 0,
+      duration: 180,
+      useNativeDriver: false,
+    }).start();
+  }, [isFocused]);
+
+  const borderBottomColor = focusAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [colors.border, colors.primary],
+  });
+
   return (
     <View style={cw.fieldContainer}>
       <Text style={cw.fieldLabel}>{label}</Text>
-      <View style={cw.fieldRow}>
+      <Animated.View style={[cw.fieldRow, { borderBottomColor }]}>
         <TextInput
           style={cw.fieldInput}
           value={value}
@@ -47,10 +64,59 @@ function UnderlineField({ label, value, onChangeText, placeholder, keyboardType,
           keyboardType={keyboardType ?? 'default'}
           secureTextEntry={secureTextEntry}
           autoCapitalize="none"
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
         />
         {rightIcon && <View style={cw.fieldRightIcon}>{rightIcon}</View>}
-      </View>
+      </Animated.View>
     </View>
+  );
+}
+
+// ─── Pin box sub-component ────────────────────────────────────────────────────
+
+function PinBox({
+  digit,
+  showPin,
+  onChange,
+  colors,
+  cw,
+}: {
+  digit: string;
+  showPin: boolean;
+  onChange: (v: string) => void;
+  colors: ThemeColors;
+  cw: any;
+}) {
+  const [isFocused, setIsFocused] = useState(false);
+  const focusAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(focusAnim, {
+      toValue: isFocused ? 1 : 0,
+      duration: 150,
+      useNativeDriver: false,
+    }).start();
+  }, [isFocused]);
+
+  const borderBottomColor = focusAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [colors.border, colors.primary],
+  });
+
+  return (
+    <Animated.View style={[cw.pinBox, { borderBottomColor }]}>
+      <TextInput
+        style={cw.pinInput}
+        value={showPin ? digit : digit ? '•' : ''}
+        onChangeText={onChange}
+        keyboardType="numeric"
+        maxLength={1}
+        textAlign="center"
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
+      />
+    </Animated.View>
   );
 }
 
@@ -75,16 +141,14 @@ function PinRow({ label, values, showPin, onToggle, onChange }: {
       </View>
       <View style={cw.pinBoxRow}>
         {values.map((digit, i) => (
-          <View key={i} style={cw.pinBox}>
-            <TextInput
-              style={cw.pinInput}
-              value={showPin ? digit : digit ? '•' : ''}
-              onChangeText={(v) => onChange(i, v.replace(/\D/g, '').slice(-1))}
-              keyboardType="numeric"
-              maxLength={1}
-              textAlign="center"
-            />
-          </View>
+          <PinBox
+            key={i}
+            digit={digit}
+            showPin={showPin}
+            onChange={(v) => onChange(i, v.replace(/\D/g, '').slice(-1))}
+            colors={colors}
+            cw={cw}
+          />
         ))}
       </View>
     </View>
@@ -106,6 +170,22 @@ export default function CreateWalletScreen() {
   const [showPin, setShowPin] = useState(false);
   const [showConfirmPin, setShowConfirmPin] = useState(false);
 
+  const [depositFocused, setDepositFocused] = useState(false);
+  const depositFocusAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(depositFocusAnim, {
+      toValue: depositFocused ? 1 : 0,
+      duration: 180,
+      useNativeDriver: false,
+    }).start();
+  }, [depositFocused]);
+
+  const depositBorderBottomColor = depositFocusAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [colors.border, colors.primary],
+  });
+
   /** Update a single digit in a PIN array. */
   function handlePinChange(arr: string[], setArr: (a: string[]) => void, index: number, digit: string) {
     const next = [...arr];
@@ -113,12 +193,21 @@ export default function CreateWalletScreen() {
     setArr(next);
   }
 
+  const handleCreateWallet = async () => {
+    try {
+      await AsyncStorage.setItem('has_wallet', 'true');
+    } catch (e) {
+      console.log(e);
+    }
+    router.replace('/dashboard');
+  };
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       <View style={cw.screen}>
-        <TouchableOpacity style={cw.backBtn} onPress={() => router.back()} activeOpacity={0.7}>
+        <InteractiveButton style={cw.backBtn} onPress={() => router.back()}>
           <IconArrowLeft size={24} color={colors.primary} />
-        </TouchableOpacity>
+        </InteractiveButton>
 
         <ScrollView style={cw.scroll} contentContainerStyle={[cw.scrollContent, { flexGrow: 1, justifyContent: 'space-between', maxWidth: 600, width: '100%', alignSelf: 'center' }]} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
           <View style={{ gap: 32 }}>
@@ -128,24 +217,49 @@ export default function CreateWalletScreen() {
             {/* Initial deposit */}
             <View style={cw.fieldContainer}>
               <Text style={cw.fieldLabel}>INITIAL DEPOSIT (₦)</Text>
-              <View style={cw.fieldRow}>
-                <TextInput style={[cw.fieldInput, cw.depositInput]} value={deposit} onChangeText={setDeposit} placeholder="0.00" placeholderTextColor="#D8DADC" keyboardType="numeric" />
-                <View style={cw.fieldRightIcon}><Text style={cw.nairaIcon}>₦</Text></View>
-              </View>
+              <Animated.View style={[cw.fieldRow, { borderBottomColor: depositBorderBottomColor }]}>
+                <TextInput
+                  style={[cw.fieldInput, cw.depositInput]}
+                  value={deposit}
+                  onChangeText={setDeposit}
+                  placeholder="0.00"
+                  placeholderTextColor="#D8DADC"
+                  keyboardType="numeric"
+                  onFocus={() => setDepositFocused(true)}
+                  onBlur={() => setDepositFocused(false)}
+                />
+                <View style={[cw.fieldRightIcon, { width: 24, height: 24 }]}>
+                  <Image source={marginIcon} style={{ width: 24, height: 24, tintColor: colors.primary }} resizeMode="contain" />
+                </View>
+              </Animated.View>
             </View>
 
-            <UnderlineField label="PHONE NUMBER" value={phone} onChangeText={setPhone} placeholder="080 0000 0000" keyboardType="phone-pad" rightIcon={<IconPhone />} />
-            <UnderlineField label="EMAIL ADDRESS" value={email} onChangeText={setEmail} placeholder="user@example.com" keyboardType="email-address" rightIcon={<IconSms />} />
+            <UnderlineField
+              label="PHONE NUMBER"
+              value={phone}
+              onChangeText={setPhone}
+              placeholder="080 0000 0000"
+              keyboardType="phone-pad"
+              rightIcon={<Image source={callIcon} style={{ width: 20, height: 20, tintColor: colors.primary }} resizeMode="contain" />}
+            />
+            <UnderlineField
+              label="EMAIL ADDRESS"
+              value={email}
+              onChangeText={setEmail}
+              placeholder="user@example.com"
+              keyboardType="email-address"
+              rightIcon={<Image source={smsIcon} style={{ width: 20, height: 20, tintColor: colors.primary }} resizeMode="contain" />}
+            />
 
             <PinRow label="SET WALLET PIN" values={pin} showPin={showPin} onToggle={() => setShowPin((v) => !v)} onChange={(i, d) => handlePinChange(pin, setPin, i, d)} />
             <PinRow label="CONFIRM PIN" values={confirmPin} showPin={showConfirmPin} onToggle={() => setShowConfirmPin((v) => !v)} onChange={(i, d) => handlePinChange(confirmPin, setConfirmPin, i, d)} />
           </View>
           </View>
 
-          <TouchableOpacity style={cw.submitBtn} onPress={() => router.replace('/dashboard')} activeOpacity={0.85}>
+          <InteractiveButton style={cw.submitBtn} onPress={handleCreateWallet}>
             <Text style={cw.submitText}>Create Wallet</Text>
             <IconArrowRight size={12} />
-          </TouchableOpacity>
+          </InteractiveButton>
         </ScrollView>
       </View>
     </SafeAreaView>

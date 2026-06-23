@@ -9,6 +9,8 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import { useFonts } from 'expo-font';
+import { Platform } from 'react-native';
+import * as NavigationBar from 'expo-navigation-bar';
 import {
   PublicSans_400Regular,
   PublicSans_500Medium,
@@ -57,6 +59,13 @@ export default function RootLayout() {
 function LayoutContent() {
   const { isDark, colors } = useTheme();
 
+  useEffect(() => {
+    if (Platform.OS === 'android') {
+      NavigationBar.setBackgroundColorAsync(colors.background);
+      NavigationBar.setButtonStyleAsync(isDark ? 'light' : 'dark');
+    }
+  }, [isDark, colors.background]);
+
   return (
     <>
       <StatusBar style={isDark ? "light" : "dark"} />
@@ -74,8 +83,22 @@ function LayoutContent() {
         <Stack.Screen name="signup" />
         <Stack.Screen name="dashboard" />
         <Stack.Screen name="create-wallet" />
-        <Stack.Screen name="menu" />
-        <Stack.Screen name="quick-menu" />
+        <Stack.Screen
+          name="menu"
+          options={{
+            presentation: 'transparentModal',
+            animation: 'fade',
+            contentStyle: { backgroundColor: 'transparent' },
+          }}
+        />
+        <Stack.Screen
+          name="quick-menu"
+          options={{
+            presentation: 'transparentModal',
+            animation: 'fade',
+            contentStyle: { backgroundColor: 'transparent' },
+          }}
+        />
         <Stack.Screen name="profile" />
         <Stack.Screen name="change-password" />
         <Stack.Screen name="history" />

@@ -5,12 +5,23 @@
  * can be used across all screens without duplication.
  */
 import React from 'react';
+import { Image } from 'react-native';
+
+const walletPng = require('@/assets/icons/wallet.png');
+const cartPng = require('@/assets/icons/cart.png');
+const createwalletPng = require('@/assets/icons/createwallet.png');
+const flashPng = require('@/assets/icons/flash.png');
+const sparkPng = require('@/assets/icons/spark.png');
+const activePng = require('@/assets/icons/active.png');
 import Svg, {
   Path,
   Circle,
   Rect,
   G,
   Line,
+  Defs,
+  RadialGradient,
+  Stop,
 } from 'react-native-svg';
 
 // ─── Auth / form icons ────────────────────────────────────────────────────────
@@ -213,9 +224,11 @@ export function IconPlus({ size = 9, color = '#F70003' }: { size?: number; color
 /** Lightning bolt — electricity / purchase units. */
 export function IconBolt({ color = '#FFFFFF', size = 20 }: { color?: string; size?: number }) {
   return (
-    <Svg width={size} height={size} viewBox="0 0 20 20" fill="none">
-      <Path d="M11.5 2L3.5 11.5H10L8.5 18L16.5 8.5H10L11.5 2Z" fill={color} />
-    </Svg>
+    <Image
+      source={flashPng}
+      style={{ width: size, height: size, tintColor: color }}
+      resizeMode="contain"
+    />
   );
 }
 
@@ -237,11 +250,11 @@ export function IconNaira({ size = 22, color = '#F70003' }: { size?: number; col
 /** Wallet icon. */
 export function IconWallet({ color = '#F70003', size = 22 }: { color?: string; size?: number }) {
   return (
-    <Svg width={size} height={size * 0.82} viewBox="0 0 22 18" fill="none">
-      <Rect x="2" y="3" width="18" height="13" rx="2" stroke={color} strokeWidth="1.5" />
-      <Path d="M2 8h18" stroke={color} strokeWidth="1.5" />
-      <Circle cx="16" cy="12" r="1.2" fill={color} />
-    </Svg>
+    <Image
+      source={walletPng}
+      style={{ width: size, height: size, tintColor: color }}
+      resizeMode="contain"
+    />
   );
 }
 
@@ -470,12 +483,58 @@ export function IconLightning({ color = '#F70003', size = 22 }: { color?: string
 
 export function IconShieldCheck({ color = '#F70003', size = 20 }: { color?: string; size?: number }) {
   return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <Path
-        d="M12 2L3 6v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V6l-9-4zm0 18.9c-4.04-1.12-7-5.46-7-9.9V7.3l7-3.11 7 3.11V11c0 4.44-2.96 8.78-7 9.9z"
-        fill={color}
-      />
-      <Path d="M10.5 14.5l-3-3 1.4-1.4 1.6 1.6 4.6-4.6 1.4 1.4-6 6z" fill={color} />
+    <Image
+      source={activePng}
+      style={{ width: size, height: size, tintColor: color }}
+      resizeMode="contain"
+    />
+  );
+}
+
+export function IconCart({ color = '#F70003', size = 20 }: { color?: string; size?: number }) {
+  return (
+    <Image
+      source={cartPng}
+      style={{ width: size, height: size, tintColor: color }}
+      resizeMode="contain"
+    />
+  );
+}
+
+export function IconWalletPlus({ color = '#F70003', size = 22 }: { color?: string; size?: number }) {
+  return (
+    <Image
+      source={createwalletPng}
+      style={{ width: size, height: size, tintColor: color }}
+      resizeMode="contain"
+    />
+  );
+}
+
+export function IconSpark({ color, size = 20 }: { color?: string; size?: number }) {
+  return (
+    <Image
+      source={sparkPng}
+      style={[
+        { width: size, height: size },
+        color ? { tintColor: color } : {}
+      ]}
+      resizeMode="contain"
+    />
+  );
+}
+
+export function IconWalletGlow({ color = '#F70003', size = 141 }: { color?: string; size?: number }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 141 141">
+      <Defs>
+        <RadialGradient id="walletGlowGrad" cx="50%" cy="50%" rx="50%" ry="50%">
+          <Stop offset="0%" stopColor={color} stopOpacity={0.12} />
+          <Stop offset="50%" stopColor={color} stopOpacity={0.04} />
+          <Stop offset="100%" stopColor={color} stopOpacity={0} />
+        </RadialGradient>
+      </Defs>
+      <Circle cx="70.5" cy="70.5" r="70.5" fill="url(#walletGlowGrad)" />
     </Svg>
   );
 }

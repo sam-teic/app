@@ -1,9 +1,4 @@
-/**
- * ChangePasswordScreen — React Native / Expo Router.
- * top:"50%" + transform replaced with top:19 (calculated).
- * boxShadow → shadow*, SVGs via react-native-svg.
- */
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,6 +6,7 @@ import {
   ScrollView,
   TextInput,
   StyleSheet,
+  Animated,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -18,6 +14,7 @@ import { IconArrowLeft, IconEye, IconEyeSlash, IconCheckCircle } from '@/compone
 import { PS_400, PS_600 } from '@/components/fonts';
 import { useTheme } from '@/context/ThemeContext';
 import { ThemeColors } from '@/constants/theme';
+import { InteractiveButton } from '@/components/FormField';
 
 // ─── Password field ───────────────────────────────────────────────────────────
 
@@ -35,11 +32,32 @@ function PasswordField({ label, value, onChangeText, showPassword, onToggle }: {
 }) {
   const { colors } = useTheme();
   const cp = getStyles(colors);
+  const [isFocused, setIsFocused] = useState(false);
+  const focusAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(focusAnim, {
+      toValue: isFocused ? 1 : 0,
+      duration: 180,
+      useNativeDriver: false,
+    }).start();
+  }, [isFocused]);
+
+  const borderColor = focusAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [colors.border, colors.primary],
+  });
+
+  const backgroundColor = focusAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [colors.surfaceSolid, colors.background],
+  });
+
   return (
     <View style={cp.fieldWrap}>
       <Text style={cp.fieldLabel}>{label}</Text>
       <View style={cp.inputRow}>
-        <View style={cp.pillInput}>
+        <Animated.View style={[cp.pillInput, { borderColor, backgroundColor }]}>
           <TextInput
             style={cp.pillText}
             value={value}
@@ -48,8 +66,10 @@ function PasswordField({ label, value, onChangeText, showPassword, onToggle }: {
             placeholder="••••••••"
             placeholderTextColor="#6b7280"
             autoCapitalize="none"
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
           />
-        </View>
+        </Animated.View>
         <TouchableOpacity style={cp.eyeBtn} onPress={onToggle} activeOpacity={0.7} accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}>
           {showPassword ? <IconEye color={colors.primary} /> : <IconEyeSlash color={colors.primary} />}
         </TouchableOpacity>
@@ -80,9 +100,9 @@ export default function ChangePasswordScreen() {
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       <View style={cp.screen}>
         <View style={cp.header}>
-          <TouchableOpacity onPress={() => router.back()} activeOpacity={0.7} style={cp.backBtn}>
+          <InteractiveButton onPress={() => router.back()} style={cp.backBtn}>
             <IconArrowLeft size={24} color={colors.primary} />
-          </TouchableOpacity>
+          </InteractiveButton>
           <Text style={cp.headerTitle}>Change Password</Text>
         </View>
 
@@ -106,10 +126,10 @@ export default function ChangePasswordScreen() {
           </View>
 
           <View style={cp.actionSection}>
-            <TouchableOpacity style={cp.updateBtn} onPress={() => router.replace('/dashboard')} activeOpacity={0.85}>
+            <InteractiveButton style={cp.updateBtn} onPress={() => router.replace('/dashboard')}>
               <View style={cp.updateBtnShadow} />
               <Text style={cp.updateBtnText}>Update Password</Text>
-            </TouchableOpacity>
+            </InteractiveButton>
           </View>
         </ScrollView>
       </View>

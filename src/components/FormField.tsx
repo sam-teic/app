@@ -2,12 +2,13 @@
  * Shared form-field component and icon wrappers used by auth screens.
  * Icons are sourced from the central icons.tsx; all web SVG refs removed.
  */
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   TouchableOpacity,
   TextInput,
   StyleSheet,
+  Animated,
 } from 'react-native';
 import { shared } from './sharedStyles';
 import {
@@ -36,6 +37,8 @@ export {
 };
 
 // ─── FormField component ──────────────────────────────────────────────────────
+
+import { useTheme } from '@/context/ThemeContext';
 
 interface FormFieldProps {
   /** Leading icon rendered on the left of the input. */
@@ -68,22 +71,52 @@ export function FormField({
   rightElement,
   keyboardType,
 }: FormFieldProps) {
+  const { colors, isDark } = useTheme();
+  const [isFocused, setIsFocused] = useState(false);
+  const focusAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(focusAnim, {
+      toValue: isFocused ? 1 : 0,
+      duration: 180,
+      useNativeDriver: false,
+    }).start();
+  }, [isFocused]);
+
+  const borderColor = focusAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [
+      isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0,0,0,0.15)',
+      colors.primary,
+    ],
+  });
+
+  const backgroundColor = focusAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [
+      isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(128,128,128,0.03)',
+      isDark ? '#000000' : '#FFFFFF',
+    ],
+  });
+
   return (
-    <View style={shared.inputWrapper}>
+    <Animated.View style={[shared.inputWrapper, { borderColor, backgroundColor }]}>
       <View style={shared.inputRow}>
         {icon != null && (
           <View style={ff.iconWrap}>{icon}</View>
         )}
         <TextInput
-          style={shared.inputText}
+          style={[shared.inputText, { color: colors.textMain }]}
           placeholder={placeholder}
-          placeholderTextColor="rgba(21,20,20,0.4)"
+          placeholderTextColor={isDark ? 'rgba(255, 255, 255, 0.4)' : 'rgba(21,20,20,0.4)'}
           value={value}
           onChangeText={onChangeText}
           secureTextEntry={secureTextEntry && !showPassword}
           keyboardType={keyboardType ?? 'default'}
           autoCapitalize="none"
           autoCorrect={false}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
         />
         {showToggle && (
           <TouchableOpacity
@@ -92,12 +125,16 @@ export function FormField({
             style={ff.iconWrap}
             accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
           >
-            {showPassword ? <IconEye /> : <IconEyeSlash />}
+            {showPassword ? (
+              <IconEye color={isDark ? '#A0A0A0' : '#94A3B8'} />
+            ) : (
+              <IconEyeSlash color={colors.primary} />
+            )}
           </TouchableOpacity>
         )}
         {rightElement}
       </View>
-    </View>
+    </Animated.View>
   );
 }
 
@@ -110,3 +147,81 @@ const ff = StyleSheet.create({
     justifyContent: 'center',
   },
 });
+
+// ─── Interactive pressable button wrapper ──────────────────────────────────────
+
+export function InteractiveButton({
+  onPress,
+  style,
+  children,
+  activeScale = 0.96,
+}: {
+  onPress: () => void;
+  style?: any;
+  children: React.ReactNode;
+  activeScale?: number;
+}) {
+  const scale = useRef(new Animated.Value(1)).current;
+
+  const onPressIn = () => {
+    Animated.timing(scale, {
+      toValue: activeScale,
+      duration: 100,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const onPressOut = () => {
+    Animated.spring(scale, {
+      toValue: 1,
+      friction: 4,
+      tension: 40,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const flatStyle = StyleSheet.flatten(style) || {};
+  const wrapperStyle: any = { transform: [{ scale }] };
+  const innerStyle: any = {};
+
+  Object.keys(flatStyle).forEach((key) => {
+    if (
+      key === 'position' ||
+      key === 'top' ||
+      key === 'left' ||
+      key === 'right' ||
+      key === 'bottom' ||
+      key === 'zIndex' ||
+      key === 'flex' ||
+      key === 'alignSelf'
+    ) {
+      wrapperStyle[key] = flatStyle[key];
+    } else {
+      innerStyle[key] = flatStyle[key];
+    }
+  });
+
+  const defaultAlign: any = {};
+  if (!flatStyle.flexDirection) {
+    defaultAlign.alignItems = 'center';
+    defaultAlign.justifyContent = 'center';
+  } else {
+    if (flatStyle.alignItems === undefined) {
+      defaultAlign.alignItems = 'center';
+    }
+  }
+
+  return (
+    <Animated.View style={wrapperStyle}>
+      <TouchableOpacity
+        activeOpacity={0.85}
+        onPressIn={onPressIn}
+        onPressOut={onPressOut}
+        onPress={onPress}
+        style={[{ width: '100%' }, defaultAlign, innerStyle]}
+      >
+        {children}
+      </TouchableOpacity>
+    </Animated.View>
+  );
+}
