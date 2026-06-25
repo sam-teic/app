@@ -50,7 +50,7 @@ export default function SignupScreen() {
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <View style={[ss.screen, { backgroundColor: colors.background }]}>
           <InteractiveButton

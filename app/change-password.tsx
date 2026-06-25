@@ -7,6 +7,8 @@ import {
   TextInput,
   StyleSheet,
   Animated,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -98,41 +100,46 @@ export default function ChangePasswordScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
-      <View style={cp.screen}>
-        <View style={cp.header}>
-          <InteractiveButton onPress={() => router.back()} style={cp.backBtn}>
-            <IconArrowLeft size={24} color={colors.primary} />
-          </InteractiveButton>
-          <Text style={cp.headerTitle}>Change Password</Text>
-        </View>
-
-        <ScrollView style={{ flex: 1 }} contentContainerStyle={[cp.scrollContent, { flexGrow: 1, justifyContent: 'space-between', maxWidth: 600, width: '100%', alignSelf: 'center' }]} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-          <View>
-            <View style={cp.formSection}>
-            <PasswordField label="CURRENT PASSWORD" value={current} onChangeText={setCurrent} showPassword={showCurrent} onToggle={() => setShowCurrent((v) => !v)} />
-            <PasswordField label="NEW PASSWORD" value={newPwd} onChangeText={setNewPwd} showPassword={showNew} onToggle={() => setShowNew((v) => !v)} />
-            <View style={cp.fieldWrap}>
-              <PasswordField label="CONFIRM NEW PASSWORD" value={confirm} onChangeText={setConfirm} showPassword={showConfirm} onToggle={() => setShowConfirm((v) => !v)} />
-            </View>
-
-            {/* Requirements */}
-            <View style={cp.requirements}>
-              <Text style={cp.reqHeader}>Your password must include:</Text>
-              <View style={cp.reqRow}><IconCheckCircle met={has8Chars} /><Text style={[cp.reqText, has8Chars && cp.reqTextMet]}>At least 8 characters</Text></View>
-              <View style={cp.reqRow}><IconCheckCircle met={hasNumber} /><Text style={[cp.reqText, hasNumber && cp.reqTextMet]}>At least one number (0-9)</Text></View>
-              <View style={cp.reqRow}><IconCheckCircle met={hasSpecial} /><Text style={[cp.reqText, hasSpecial && cp.reqTextMet]}>One special character (!@#$)</Text></View>
-            </View>
-          </View>
-          </View>
-
-          <View style={cp.actionSection}>
-            <InteractiveButton style={cp.updateBtn} onPress={() => router.replace('/dashboard')}>
-              <View style={cp.updateBtnShadow} />
-              <Text style={cp.updateBtnText}>Update Password</Text>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <View style={cp.screen}>
+          <View style={cp.header}>
+            <InteractiveButton onPress={() => router.back()} style={cp.backBtn}>
+              <IconArrowLeft size={24} color={colors.primary} />
             </InteractiveButton>
+            <Text style={cp.headerTitle}>Change Password</Text>
           </View>
-        </ScrollView>
-      </View>
+
+          <ScrollView style={{ flex: 1 }} contentContainerStyle={[cp.scrollContent, { flexGrow: 1, justifyContent: 'space-between', maxWidth: 600, width: '100%', alignSelf: 'center' }]} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+            <View>
+              <View style={cp.formSection}>
+              <PasswordField label="CURRENT PASSWORD" value={current} onChangeText={setCurrent} showPassword={showCurrent} onToggle={() => setShowCurrent((v) => !v)} />
+              <PasswordField label="NEW PASSWORD" value={newPwd} onChangeText={setNewPwd} showPassword={showNew} onToggle={() => setShowNew((v) => !v)} />
+              <View style={cp.fieldWrap}>
+                <PasswordField label="CONFIRM NEW PASSWORD" value={confirm} onChangeText={setConfirm} showPassword={showConfirm} onToggle={() => setShowConfirm((v) => !v)} />
+              </View>
+
+              {/* Requirements */}
+              <View style={cp.requirements}>
+                <Text style={cp.reqHeader}>Your password must include:</Text>
+                <View style={cp.reqRow}><IconCheckCircle met={has8Chars} /><Text style={[cp.reqText, has8Chars && cp.reqTextMet]}>At least 8 characters</Text></View>
+                <View style={cp.reqRow}><IconCheckCircle met={hasNumber} /><Text style={[cp.reqText, hasNumber && cp.reqTextMet]}>At least one number (0-9)</Text></View>
+                <View style={cp.reqRow}><IconCheckCircle met={hasSpecial} /><Text style={[cp.reqText, hasSpecial && cp.reqTextMet]}>One special character (!@#$)</Text></View>
+              </View>
+            </View>
+            </View>
+
+            <View style={cp.actionSection}>
+              <InteractiveButton style={cp.updateBtn} onPress={() => router.replace('/dashboard')}>
+                <View style={cp.updateBtnShadow} />
+                <Text style={cp.updateBtnText}>Update Password</Text>
+              </InteractiveButton>
+            </View>
+          </ScrollView>
+        </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

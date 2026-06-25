@@ -8,6 +8,8 @@ import {
   StyleSheet,
   Animated,
   Image,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -204,64 +206,69 @@ export default function CreateWalletScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
-      <View style={cw.screen}>
-        <InteractiveButton style={cw.backBtn} onPress={() => router.back()}>
-          <IconArrowLeft size={24} color={colors.primary} />
-        </InteractiveButton>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <View style={cw.screen}>
+          <InteractiveButton style={cw.backBtn} onPress={() => router.back()}>
+            <IconArrowLeft size={24} color={colors.primary} />
+          </InteractiveButton>
 
-        <ScrollView style={cw.scroll} contentContainerStyle={[cw.scrollContent, { flexGrow: 1, justifyContent: 'space-between', maxWidth: 600, width: '100%', alignSelf: 'center' }]} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-          <View style={{ gap: 32 }}>
-            <Text style={cw.title}>Create Wallet</Text>
+          <ScrollView style={cw.scroll} contentContainerStyle={[cw.scrollContent, { flexGrow: 1, justifyContent: 'space-between', maxWidth: 600, width: '100%', alignSelf: 'center' }]} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+            <View style={{ gap: 32 }}>
+              <Text style={cw.title}>Create Wallet</Text>
 
-            <View style={cw.formCard}>
-            {/* Initial deposit */}
-            <View style={cw.fieldContainer}>
-              <Text style={cw.fieldLabel}>INITIAL DEPOSIT (₦)</Text>
-              <Animated.View style={[cw.fieldRow, { borderBottomColor: depositBorderBottomColor }]}>
-                <TextInput
-                  style={[cw.fieldInput, cw.depositInput]}
-                  value={deposit}
-                  onChangeText={setDeposit}
-                  placeholder="0.00"
-                  placeholderTextColor="#D8DADC"
-                  keyboardType="numeric"
-                  onFocus={() => setDepositFocused(true)}
-                  onBlur={() => setDepositFocused(false)}
-                />
-                <View style={[cw.fieldRightIcon, { width: 24, height: 24 }]}>
-                  <Image source={marginIcon} style={{ width: 24, height: 24, tintColor: colors.primary }} resizeMode="contain" />
-                </View>
-              </Animated.View>
+              <View style={cw.formCard}>
+              {/* Initial deposit */}
+              <View style={cw.fieldContainer}>
+                <Text style={cw.fieldLabel}>INITIAL DEPOSIT (₦)</Text>
+                <Animated.View style={[cw.fieldRow, { borderBottomColor: depositBorderBottomColor }]}>
+                  <TextInput
+                    style={[cw.fieldInput, cw.depositInput]}
+                    value={deposit}
+                    onChangeText={setDeposit}
+                    placeholder="0.00"
+                    placeholderTextColor="#D8DADC"
+                    keyboardType="numeric"
+                    onFocus={() => setDepositFocused(true)}
+                    onBlur={() => setDepositFocused(false)}
+                  />
+                  <View style={[cw.fieldRightIcon, { width: 24, height: 24 }]}>
+                    <Image source={marginIcon} style={{ width: 24, height: 24, tintColor: colors.primary }} resizeMode="contain" />
+                  </View>
+                </Animated.View>
+              </View>
+
+              <UnderlineField
+                label="PHONE NUMBER"
+                value={phone}
+                onChangeText={setPhone}
+                placeholder="080 0000 0000"
+                keyboardType="phone-pad"
+                rightIcon={<Image source={callIcon} style={{ width: 20, height: 20, tintColor: colors.primary }} resizeMode="contain" />}
+              />
+              <UnderlineField
+                label="EMAIL ADDRESS"
+                value={email}
+                onChangeText={setEmail}
+                placeholder="user@example.com"
+                keyboardType="email-address"
+                rightIcon={<Image source={smsIcon} style={{ width: 20, height: 20, tintColor: colors.primary }} resizeMode="contain" />}
+              />
+
+              <PinRow label="SET WALLET PIN" values={pin} showPin={showPin} onToggle={() => setShowPin((v) => !v)} onChange={(i, d) => handlePinChange(pin, setPin, i, d)} />
+              <PinRow label="CONFIRM PIN" values={confirmPin} showPin={showConfirmPin} onToggle={() => setShowConfirmPin((v) => !v)} onChange={(i, d) => handlePinChange(confirmPin, setConfirmPin, i, d)} />
+            </View>
             </View>
 
-            <UnderlineField
-              label="PHONE NUMBER"
-              value={phone}
-              onChangeText={setPhone}
-              placeholder="080 0000 0000"
-              keyboardType="phone-pad"
-              rightIcon={<Image source={callIcon} style={{ width: 20, height: 20, tintColor: colors.primary }} resizeMode="contain" />}
-            />
-            <UnderlineField
-              label="EMAIL ADDRESS"
-              value={email}
-              onChangeText={setEmail}
-              placeholder="user@example.com"
-              keyboardType="email-address"
-              rightIcon={<Image source={smsIcon} style={{ width: 20, height: 20, tintColor: colors.primary }} resizeMode="contain" />}
-            />
-
-            <PinRow label="SET WALLET PIN" values={pin} showPin={showPin} onToggle={() => setShowPin((v) => !v)} onChange={(i, d) => handlePinChange(pin, setPin, i, d)} />
-            <PinRow label="CONFIRM PIN" values={confirmPin} showPin={showConfirmPin} onToggle={() => setShowConfirmPin((v) => !v)} onChange={(i, d) => handlePinChange(confirmPin, setConfirmPin, i, d)} />
-          </View>
-          </View>
-
-          <InteractiveButton style={cw.submitBtn} onPress={handleCreateWallet}>
-            <Text style={cw.submitText}>Create Wallet</Text>
-            <IconArrowRight size={12} />
-          </InteractiveButton>
-        </ScrollView>
-      </View>
+            <InteractiveButton style={cw.submitBtn} onPress={handleCreateWallet}>
+              <Text style={cw.submitText}>Create Wallet</Text>
+              <IconArrowRight size={12} />
+            </InteractiveButton>
+          </ScrollView>
+        </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

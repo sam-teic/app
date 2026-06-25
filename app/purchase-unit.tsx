@@ -8,6 +8,8 @@ import {
   StyleSheet,
   Animated,
   Image,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -178,135 +180,140 @@ export default function PurchaseUnitScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
-      <View style={pu.screen}>
-        {/* Back Button Container */}
-        <InteractiveButton onPress={() => router.back()} style={pu.backBtnContainer}>
-          <IconArrowLeft size={24} color={isDark ? "white" : "black"} />
-        </InteractiveButton>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <View style={pu.screen}>
+          {/* Back Button Container */}
+          <InteractiveButton onPress={() => router.back()} style={pu.backBtnContainer}>
+            <IconArrowLeft size={24} color={isDark ? "white" : "black"} />
+          </InteractiveButton>
 
-        <ScrollView style={{ flex: 1 }} contentContainerStyle={[pu.scrollContent, { flexGrow: 1, justifyContent: 'space-between', maxWidth: 600, width: '100%', alignSelf: 'center' }]} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-          <View style={{ gap: 24 }}>
-            <Text style={pu.screenTitle}>Purchase Units</Text>
+          <ScrollView style={{ flex: 1 }} contentContainerStyle={[pu.scrollContent, { flexGrow: 1, justifyContent: 'space-between', maxWidth: 600, width: '100%', alignSelf: 'center' }]} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+            <View style={{ gap: 24 }}>
+              <Text style={pu.screenTitle}>Purchase Units</Text>
 
-            {/* Meter input with rounded border */}
-            <View style={pu.fieldContainer}>
-              <View style={pu.fieldLabelRow}>
-                <Text style={pu.fieldLabel}>METER/CUSTOMER NUMBER</Text>
-                <InteractiveButton onPress={() => setExtraMeters((v) => [...v, ''])} activeScale={0.96}>
-                  <Text style={pu.addAnotherText}>+ Add Another</Text>
-                </InteractiveButton>
+              {/* Meter input with rounded border */}
+              <View style={pu.fieldContainer}>
+                <View style={pu.fieldLabelRow}>
+                  <Text style={pu.fieldLabel}>METER/CUSTOMER NUMBER</Text>
+                  <InteractiveButton onPress={() => setExtraMeters((v) => [...v, ''])} activeScale={0.96}>
+                    <Text style={pu.addAnotherText}>+ Add Another</Text>
+                  </InteractiveButton>
+                </View>
+                <Animated.View style={[pu.amountInputWrap, { borderColor: meterBorderColor, backgroundColor: meterBackgroundColor }]}>
+                  <TextInput
+                    style={[pu.amountInput, { left: 24, fontSize: 16, fontFamily: PS_600 }]}
+                    value={meterNo}
+                    onChangeText={setMeterNo}
+                    placeholder="Enter meter number"
+                    placeholderTextColor="#D8DADC"
+                    keyboardType="numeric"
+                    onFocus={() => setMeterFocused(true)}
+                    onBlur={() => setMeterFocused(false)}
+                  />
+                  <View style={[pu.amountSuffix, { top: 12 }]}>
+                    <Image source={activeLogo} style={{ width: 68, height: 40 }} resizeMode="contain" />
+                  </View>
+                </Animated.View>
               </View>
-              <Animated.View style={[pu.amountInputWrap, { borderColor: meterBorderColor, backgroundColor: meterBackgroundColor }]}>
-                <TextInput
-                  style={[pu.amountInput, { left: 24, fontSize: 16, fontFamily: PS_600 }]}
-                  value={meterNo}
-                  onChangeText={setMeterNo}
-                  placeholder="Enter meter number"
-                  placeholderTextColor="#D8DADC"
-                  keyboardType="numeric"
-                  onFocus={() => setMeterFocused(true)}
-                  onBlur={() => setMeterFocused(false)}
+
+              {extraMeters.map((m, i) => (
+                <ExtraMeterField
+                  key={i}
+                  index={i}
+                  value={m}
+                  onChangeText={(v) => {
+                    const next = [...extraMeters];
+                    next[i] = v;
+                    setExtraMeters(next);
+                  }}
+                  colors={colors}
+                  logoSource={activeLogo}
                 />
-                <View style={[pu.amountSuffix, { top: 12 }]}>
-                  <Image source={activeLogo} style={{ width: 68, height: 40 }} resizeMode="contain" />
-                </View>
-              </Animated.View>
-            </View>
+              ))}
 
-            {extraMeters.map((m, i) => (
-              <ExtraMeterField
-                key={i}
-                index={i}
-                value={m}
-                onChangeText={(v) => {
-                  const next = [...extraMeters];
-                  next[i] = v;
-                  setExtraMeters(next);
-                }}
-                colors={colors}
-                logoSource={activeLogo}
-              />
-            ))}
+              {/* Amount input */}
+              <View style={pu.amountSection}>
+                <Text style={pu.amountLabel}>ENTER AMOUNT</Text>
+                <Animated.View style={[pu.amountInputWrap, { borderColor: amountBorderColor, backgroundColor: amountBackgroundColor }]}>
+                  <View style={[pu.amountPrefix, { top: AMOUNT_PREFIX_TOP }]}>
+                    <Text style={pu.amountPrefixText}>₦</Text>
+                  </View>
+                  <TextInput
+                    style={pu.amountInput}
+                    value={amount}
+                    onChangeText={setAmount}
+                    placeholder="0.00"
+                    placeholderTextColor="#D8DADC"
+                    keyboardType="numeric"
+                    onFocus={() => setAmountFocused(true)}
+                    onBlur={() => setAmountFocused(false)}
+                  />
+                  <View style={[pu.amountSuffix, { top: 20 }]}>
+                    <Image source={marginIcon} style={{ width: 24, height: 24, tintColor: '#F70003' }} resizeMode="contain" />
+                  </View>
+                </Animated.View>
 
-            {/* Amount input */}
-            <View style={pu.amountSection}>
-              <Text style={pu.amountLabel}>ENTER AMOUNT</Text>
-              <Animated.View style={[pu.amountInputWrap, { borderColor: amountBorderColor, backgroundColor: amountBackgroundColor }]}>
-                <View style={[pu.amountPrefix, { top: AMOUNT_PREFIX_TOP }]}>
-                  <Text style={pu.amountPrefixText}>₦</Text>
+                {/* Quick amounts */}
+                <View style={pu.quickAmounts}>
+                  {QUICK_AMOUNTS.map((q) => {
+                    const numVal = q.replace(/[₦,]/g, '');
+                    const isActive = amount === numVal;
+                    return (
+                      <InteractiveButton
+                        key={q}
+                        style={[
+                          pu.quickBtn,
+                          isActive ? pu.quickBtnActive : pu.quickBtnInactive
+                        ]}
+                        onPress={() => setAmount(numVal)}
+                        activeScale={0.94}
+                      >
+                        <Text style={[
+                          pu.quickBtnText,
+                          isActive ? pu.quickBtnTextActive : pu.quickBtnTextInactive
+                        ]}>{q}</Text>
+                      </InteractiveButton>
+                    );
+                  })}
                 </View>
-                <TextInput
-                  style={pu.amountInput}
-                  value={amount}
-                  onChangeText={setAmount}
-                  placeholder="0.00"
-                  placeholderTextColor="#D8DADC"
-                  keyboardType="numeric"
-                  onFocus={() => setAmountFocused(true)}
-                  onBlur={() => setAmountFocused(false)}
+              </View>
+
+              {/* Form card */}
+              <View style={pu.formCard}>
+                <Text style={pu.receiptTitle}>RECEIPT INFORMATION</Text>
+
+                <UnderlineInput
+                  label="PHONE NUMBER"
+                  value={phone}
+                  onChangeText={setPhone}
+                  placeholder="080 0000 0000"
+                  keyboardType="phone-pad"
+                  rightIcon={<Image source={callIcon} style={{ width: 18, height: 18, tintColor: '#F70003' }} resizeMode="contain" />}
                 />
-                <View style={[pu.amountSuffix, { top: 20 }]}>
-                  <Image source={marginIcon} style={{ width: 24, height: 24, tintColor: '#F70003' }} resizeMode="contain" />
-                </View>
-              </Animated.View>
-
-              {/* Quick amounts */}
-              <View style={pu.quickAmounts}>
-                {QUICK_AMOUNTS.map((q) => {
-                  const numVal = q.replace(/[₦,]/g, '');
-                  const isActive = amount === numVal;
-                  return (
-                    <InteractiveButton
-                      key={q}
-                      style={[
-                        pu.quickBtn,
-                        isActive ? pu.quickBtnActive : pu.quickBtnInactive
-                      ]}
-                      onPress={() => setAmount(numVal)}
-                      activeScale={0.94}
-                    >
-                      <Text style={[
-                        pu.quickBtnText,
-                        isActive ? pu.quickBtnTextActive : pu.quickBtnTextInactive
-                      ]}>{q}</Text>
-                    </InteractiveButton>
-                  );
-                })}
+                <UnderlineInput
+                  label="EMAIL"
+                  value={email}
+                  onChangeText={setEmail}
+                  placeholder="user@example.com"
+                  keyboardType="email-address"
+                  rightIcon={<Image source={smsIcon} style={{ width: 18, height: 18, tintColor: '#F70003' }} resizeMode="contain" />}
+                />
               </View>
             </View>
 
-            {/* Form card */}
-            <View style={pu.formCard}>
-              <Text style={pu.receiptTitle}>RECEIPT INFORMATION</Text>
-
-              <UnderlineInput
-                label="PHONE NUMBER"
-                value={phone}
-                onChangeText={setPhone}
-                placeholder="080 0000 0000"
-                keyboardType="phone-pad"
-                rightIcon={<Image source={callIcon} style={{ width: 18, height: 18, tintColor: '#F70003' }} resizeMode="contain" />}
-              />
-              <UnderlineInput
-                label="EMAIL"
-                value={email}
-                onChangeText={setEmail}
-                placeholder="user@example.com"
-                keyboardType="email-address"
-                rightIcon={<Image source={smsIcon} style={{ width: 18, height: 18, tintColor: '#F70003' }} resizeMode="contain" />}
-              />
+            <View style={{ marginTop: 24 }}>
+              <InteractiveButton style={pu.submitBtn} onPress={() => router.push('/confirm-details')}>
+                <Text style={pu.submitText}>Continue</Text>
+                <IconArrowRight size={12} color="white" />
+              </InteractiveButton>
+              <Text style={pu.footerText}>Your token will be sent to the provided contacts.</Text>
             </View>
-          </View>
-
-          <View style={{ marginTop: 24 }}>
-            <InteractiveButton style={pu.submitBtn} onPress={() => router.push('/confirm-details')}>
-              <Text style={pu.submitText}>Continue</Text>
-              <IconArrowRight size={12} color="white" />
-            </InteractiveButton>
-            <Text style={pu.footerText}>Your token will be sent to the provided contacts.</Text>
-          </View>
-        </ScrollView>
-      </View>
+          </ScrollView>
+        </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

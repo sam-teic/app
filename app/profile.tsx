@@ -7,6 +7,8 @@ import {
   TextInput,
   StyleSheet,
   Animated,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -93,47 +95,52 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
-      <View style={ps.screen}>
-        <View style={ps.header}>
-          <InteractiveButton onPress={() => router.back()} style={ps.backBtn}>
-            <IconArrowLeft size={24} color={colors.primary} />
-          </InteractiveButton>
-          <Text style={ps.headerTitle}>Manage Profile</Text>
-        </View>
-
-        <ScrollView style={{ flex: 1 }} contentContainerStyle={[ps.scrollContent, { flexGrow: 1, justifyContent: 'space-between', maxWidth: 600, width: '100%', alignSelf: 'center' }]} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-          <View>
-            <View style={ps.formSection}>
-            <PillField label="FULL NAME" value={fullName} onChangeText={setFullName} icon={<IconUser color={colors.primary} size={20} />} />
-            <PillField label="EMAIL ADDRESS" value={email} onChangeText={setEmail} icon={<IconSms color={colors.primary} size={20} />} />
-            <PillField label="PHONE NUMBER" value={phone} onChangeText={setPhone} icon={<IconPhone color={colors.primary} size={20} />} />
-            <PillField label="METER NUMBER" value="4515-1438-822" disabled icon={<IconCalculator color={colors.primary} size={20} />} helperText="Meter number is linked to your utility account and cannot be changed." />
-          </View>
-          </View>
-
-          <View style={{ gap: 16 }}>
-            <View style={ps.actionSection}>
-            <InteractiveButton style={ps.saveBtn} onPress={() => router.replace('/dashboard')}>
-              <View style={ps.saveBtnShadow} />
-              <Text style={ps.saveBtnText}>Save Changes</Text>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <View style={ps.screen}>
+          <View style={ps.header}>
+            <InteractiveButton onPress={() => router.back()} style={ps.backBtn}>
+              <IconArrowLeft size={24} color={colors.primary} />
             </InteractiveButton>
-            <InteractiveButton style={ps.logoutBtn} onPress={() => router.replace('/welcome')}>
-              <Text style={ps.logoutBtnText}>Log Out</Text>
-            </InteractiveButton>
+            <Text style={ps.headerTitle}>Manage Profile</Text>
           </View>
 
-            <View style={ps.securityBadge}>
-              <View style={ps.securityIconCircle}>
-                <IconShieldCheck color={colors.primary} size={16} />
-              </View>
-              <View style={ps.securityText}>
-                <Text style={ps.securityTitle}>Data Protection</Text>
-                <Text style={ps.securityDesc}>Your profile data is encrypted and secure with Access Power protocols.</Text>
+          <ScrollView style={{ flex: 1 }} contentContainerStyle={[ps.scrollContent, { flexGrow: 1, justifyContent: 'space-between', maxWidth: 600, width: '100%', alignSelf: 'center' }]} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+            <View>
+              <View style={ps.formSection}>
+              <PillField label="FULL NAME" value={fullName} onChangeText={setFullName} icon={<IconUser color={colors.primary} size={20} />} />
+              <PillField label="EMAIL ADDRESS" value={email} onChangeText={setEmail} icon={<IconSms color={colors.primary} size={20} />} />
+              <PillField label="PHONE NUMBER" value={phone} onChangeText={setPhone} icon={<IconPhone color={colors.primary} size={20} />} />
+              <PillField label="METER NUMBER" value="4515-1438-822" disabled icon={<IconCalculator color={colors.primary} size={20} />} helperText="Meter number is linked to your utility account and cannot be changed." />
+            </View>
+            </View>
+
+            <View style={{ gap: 16 }}>
+              <View style={ps.actionSection}>
+              <InteractiveButton style={ps.saveBtn} onPress={() => router.replace('/dashboard')}>
+                <View style={ps.saveBtnShadow} />
+                <Text style={ps.saveBtnText}>Save Changes</Text>
+              </InteractiveButton>
+              <InteractiveButton style={ps.logoutBtn} onPress={() => router.replace('/welcome')}>
+                <Text style={ps.logoutBtnText}>Log Out</Text>
+              </InteractiveButton>
+            </View>
+
+              <View style={ps.securityBadge}>
+                <View style={ps.securityIconCircle}>
+                  <IconShieldCheck color={colors.primary} size={16} />
+                </View>
+                <View style={ps.securityText}>
+                  <Text style={ps.securityTitle}>Data Protection</Text>
+                  <Text style={ps.securityDesc}>Your profile data is encrypted and secure with Access Power protocols.</Text>
+                </View>
               </View>
             </View>
-          </View>
-        </ScrollView>
-      </View>
+          </ScrollView>
+        </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

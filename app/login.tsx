@@ -10,6 +10,8 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -28,64 +30,69 @@ export default function LoginScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
-      <View style={[ls.screen, { backgroundColor: colors.background }]}>
-        {/* Back arrow */}
-        <InteractiveButton style={ls.backBtn} onPress={() => router.back()} activeScale={0.9}>
-          <IconArrowLeft size={24} color={colors.textMain} />
-        </InteractiveButton>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <View style={[ls.screen, { backgroundColor: colors.background }]}>
+          {/* Back arrow */}
+          <InteractiveButton style={ls.backBtn} onPress={() => router.back()} activeScale={0.9}>
+            <IconArrowLeft size={24} color={colors.textMain} />
+          </InteractiveButton>
 
-        <ScrollView
-          style={ls.scroll}
-          contentContainerStyle={[ls.scrollContent, { flexGrow: 1, justifyContent: 'flex-start', maxWidth: 600, width: '100%', alignSelf: 'center' }]}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        >
-          <View>
-            <Text style={[ls.title, { color: colors.textMain }]}>Welcome Back!</Text>
+          <ScrollView
+            style={ls.scroll}
+            contentContainerStyle={[ls.scrollContent, { flexGrow: 1, justifyContent: 'flex-start', maxWidth: 600, width: '100%', alignSelf: 'center' }]}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            <View>
+              <Text style={[ls.title, { color: colors.textMain }]}>Welcome Back!</Text>
 
-            <View style={ls.form}>
-            <FormField
-              icon={<IconPhone />}
-              placeholder="Phone Number"
-              value={identifier}
-              onChangeText={setIdentifier}
-              keyboardType="phone-pad"
-            />
-
-            <View style={ls.passwordGroup}>
+              <View style={ls.form}>
               <FormField
-                icon={<IconLock />}
-                placeholder="Password"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-                showToggle
-                showPassword={showPassword}
-                onTogglePassword={() => setShowPassword((v) => !v)}
+                icon={<IconPhone />}
+                placeholder="Phone Number"
+                value={identifier}
+                onChangeText={setIdentifier}
+                keyboardType="phone-pad"
               />
-              <TouchableOpacity style={ls.forgotRow} onPress={() => {}} activeOpacity={0.7}>
-                <Text style={[ls.forgotText, { color: colors.primary }]}>Forgot Your Password?</Text>
+
+              <View style={ls.passwordGroup}>
+                <FormField
+                  icon={<IconLock />}
+                  placeholder="Password"
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry
+                  showToggle
+                  showPassword={showPassword}
+                  onTogglePassword={() => setShowPassword((v) => !v)}
+                />
+                <TouchableOpacity style={ls.forgotRow} onPress={() => {}} activeOpacity={0.7}>
+                  <Text style={[ls.forgotText, { color: colors.primary }]}>Forgot Your Password?</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+            </View>
+
+            <View style={ls.actions}>
+              <InteractiveButton
+                style={[shared.primaryBtn, { alignSelf: 'stretch', backgroundColor: colors.primary }]}
+                onPress={() => router.replace('/dashboard')}
+                activeScale={0.96}
+              >
+                <Text style={shared.primaryBtnText}>Login</Text>
+              </InteractiveButton>
+
+              <TouchableOpacity style={shared.authLinkRow} onPress={() => router.push('/signup')} activeOpacity={0.7}>
+                <Text style={[shared.authLinkNormal, { color: colors.textSub }]}>{"Don't have an account? "}</Text>
+                <Text style={[shared.authLinkBold, { color: colors.primary }]}>Sign up</Text>
               </TouchableOpacity>
             </View>
-          </View>
-          </View>
-
-          <View style={ls.actions}>
-            <InteractiveButton
-              style={[shared.primaryBtn, { alignSelf: 'stretch', backgroundColor: colors.primary }]}
-              onPress={() => router.replace('/dashboard')}
-              activeScale={0.96}
-            >
-              <Text style={shared.primaryBtnText}>Login</Text>
-            </InteractiveButton>
-
-            <TouchableOpacity style={shared.authLinkRow} onPress={() => router.push('/signup')} activeOpacity={0.7}>
-              <Text style={[shared.authLinkNormal, { color: colors.textSub }]}>{"Don't have an account? "}</Text>
-              <Text style={[shared.authLinkBold, { color: colors.primary }]}>Sign up</Text>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
-      </View>
+          </ScrollView>
+        </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
